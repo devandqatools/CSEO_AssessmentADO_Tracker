@@ -24,7 +24,7 @@ namespace TFRestApiApp
         static readonly string TFUrl = "https://smsgaccessibilityreviews.visualstudio.com/";
         static readonly string UserAccount = "";
         static readonly string UserPassword = "";
-        static readonly string UserPAT = "";
+        static readonly string UserPAT = "ynnjrnmt3jq35k76a3rthsoon5qk2djnrahhdbaoct64bcmfisoa";
         static readonly string teamProject = "CDSVSO";
         static readonly string workitemType = "Feature";
 
@@ -70,7 +70,7 @@ namespace TFRestApiApp
 
             ConnectWithPAT(TFUrl, UserPAT);
             string recid_Pattern = "'RecID_";
-            
+
             dtTotalAppNames = connectAndGetDataFromAIRTDB(TN_NewRecordsInAIRT, ConfigurationManager.AppSettings["TodayRecordsInAIRT"]);
 
             if (dtTotalAppNames.Rows.Count == 0)
@@ -101,6 +101,7 @@ namespace TFRestApiApp
                     GetQueryResult(queryWiqlList, teamProject);
                 }
             }
+
         }
 
         /// <summary>
@@ -166,7 +167,9 @@ namespace TFRestApiApp
 
             DataRow[] rowsFiltered = dt_AllNewRecordsInAIRT.Select(WorkitemType_Feature_Title);
 
-            for(int i=0; i< rowsFiltered.Length; i++)
+            int parentId = 11242;
+
+            for (int i=0; i< rowsFiltered.Length; i++)
             {
                 //Get the Record id
                 RecordID = rowsFiltered[i]["Recid"].ToString();
@@ -243,8 +246,87 @@ namespace TFRestApiApp
             fields.Add("Assigned To", WorkitemType_Feature_AssignTo);
             fields.Add("Business Value", 999);
             var newBug = CreateWorkItem(ProjectName, WorkitemType, fields);
-            //UpdateWorkItemLink(11242, newBug.Id.Value, RelConstants.ParrentRefStr);
+            if (parentId > 0) AddParentLink(newBug.Id.Value, parentId);
             return newBug.Id.Value;
+        }
+
+
+        /// <summary>
+        /// Add new parent link to existing work item
+        /// </summary>
+        /// <param name="WiId"></param>
+        /// <param name="ParentWiId"></param>
+        /// <returns></returns>
+        static WorkItem AddParentLink(int WiId, int ParentWiId)
+        {
+            WorkItem wi = WitClient.GetWorkItemAsync(WiId, expand: WorkItemExpand.Relations).Result;
+            bool parentExists = false;
+
+            // check existing parent link
+            if (wi.Relations != null)
+                if (wi.Relations.Where(x => x.Rel == RelConstants.ParentRefStr).FirstOrDefault() != null)
+                    parentExists = true;
+
+            if (!parentExists)
+            {
+                WorkItem parentWi = WitClient.GetWorkItemAsync(ParentWiId).Result; // get parent to retrieve its url
+
+                Dictionary<string, object> fields = new Dictionary<string, object>();
+
+                fields.Add(RelConstants.LinkKeyForDict + RelConstants.ParentRefStr + parentWi.Id, // to use as unique key
+                CreateNewLinkObject(RelConstants.ParentRefStr, parentWi.Url, "Parent " + parentWi.Id));
+
+                return SubmitWorkItem(fields, WiId);
+            }
+
+            Console.WriteLine("Work Item " + WiId + " contains a parent link");
+
+            return null;
+        }
+
+        /// <summary>
+        /// Create or update a work item
+        /// </summary>
+        /// <param name="WIId"></param>
+        /// <param name="References"></param>
+        /// <returns></returns>
+        static WorkItem SubmitWorkItem(Dictionary<string, object> Fields, int WIId = 0, string TeamProjectName = "", string WorkItemTypeName = "")
+        {
+            JsonPatchDocument patchDocument = new JsonPatchDocument();
+
+            foreach (var key in Fields.Keys)
+                patchDocument.Add(new JsonPatchOperation()
+                {
+                    Operation = Operation.Add,
+                    Path = (key.StartsWith(RelConstants.LinkKeyForDict)) ? "/relations/-" : "/fields/" + key,
+                    Value = Fields[key]
+                });
+
+            if (WIId == 0) return WitClient.CreateWorkItemAsync(patchDocument, TeamProjectName, WorkItemTypeName).Result; // create new work item
+
+            return WitClient.UpdateWorkItemAsync(patchDocument, WIId).Result; // return updated work item
+        }
+
+        /// <summary>
+        /// Create a link object
+        /// </summary>
+        /// <param name="RelName"></param>
+        /// <param name="RelUrl"></param>
+        /// <param name="Comment"></param>
+        /// <param name="IsLocked"></param>
+        /// <returns></returns>
+        static object CreateNewLinkObject(string RelName, string RelUrl, string Comment = null, bool IsLocked = false)
+        {
+            return new
+            {
+                rel = RelName,
+                url = RelUrl,
+                attributes = new
+                {
+                    comment = Comment,
+                    isLocked = IsLocked // you must be an administrator to lock a link
+                }
+            };
         }
 
         /// <summary>
@@ -313,6 +395,9 @@ namespace TFRestApiApp
 
             return WitClient.UpdateWorkItemAsync(patchDocument, WIId).Result; // return updated work item
         }
+
+
+
 
 
         #region sendEmail
@@ -424,7 +509,7 @@ namespace TFRestApiApp
             System.Data.DataTable dt = new System.Data.DataTable();
             SqlCommand cmd = new SqlCommand();
             string dbConn = null;
-            dbConn = @"";
+            dbConn = @"Data Source = airtproddbserver.database.windows.net; user id=AIRTReader; password=Reader_AIRT@12; Initial Catalog = AIRTProd;";
             cmd.CommandText = QueryName;
             Console.WriteLine("Executes {0}", QueryName);
             SqlConnection sqlConnection1 = new SqlConnection(dbConn);
@@ -482,6 +567,7 @@ namespace TFRestApiApp
 
             public const string RelatedRefStr = "System.LinkTypes.Related";
             public const string ChildRefStr = "System.LinkTypes.Hierarchy-Forward";
+            public const string ParentRefStr = "System.LinkTypes.Hierarchy-Reverse";
             public const string ParrentRefStr = "System.LinkTypes.Hierarchy-Reverse";
             public const string DuplicateRefStr = "System.LinkTypes.Duplicate-Forward";
             public const string DuplicateOfRefStr = "System.LinkTypes.Duplicate-Reverse";
