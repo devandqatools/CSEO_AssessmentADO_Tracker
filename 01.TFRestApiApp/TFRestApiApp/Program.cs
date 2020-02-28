@@ -27,6 +27,7 @@ namespace TFRestApiApp
         static readonly string UserPAT = "";
         static readonly string teamProject = "CDSVSO";
         static readonly string workitemType = "Feature";
+        static readonly string workitemType2 = "User Story";
 
         static readonly string TN_NewRecordsInAIRT = "NewRecordsInAIRT";
         public static int reportType_1 = 1; //Where New Records not created in AIRT
@@ -39,8 +40,8 @@ namespace TFRestApiApp
         static TfvcHttpClient TfvsClient;
         static TestManagementHttpClient TestManagementClient;
 
-        public static string WorkitemType_Feature_Title;
         public static string RecordID;
+        public static string Grade;
         public static string Group;
         public static string SubGroup;
         public static string ApplicationName;
@@ -67,7 +68,6 @@ namespace TFRestApiApp
         {
             string applicationType = ConfigurationManager.AppSettings["ApplicationType"];
             Console.WriteLine("<=========CSEO Accessbility Assessments ADO Features automater Creater Started=========>");
-
             ConnectWithPAT(TFUrl, UserPAT);
             string recid_Pattern = "'RecID_";
 
@@ -113,7 +113,14 @@ namespace TFRestApiApp
                     recid_Pattern + newRecid.ToString() + "'" +
                     "and [System.State] <> 'Removed' and [System.State] <> 'Closed'";
 
-                    WorkitemType_Feature_Title = "Recid=" + newRecid.ToString();
+                    RecordID = newRecid.ToString();
+                    Grade = grade;
+                    Group = grp;
+                    SubGroup = subGrp;
+                    ApplicationName = nameDesc;
+                    Priority = priority;
+                    shortcut_Group = string.Concat(Group.Where(c => c >= 'A' && c <= 'Z'));
+                    shortcut_SubGroup = string.Concat(SubGroup.Where(c => c >= 'A' && c <= 'Z'));
                     string appendString = GetQueryResult(queryWiqlList, teamProject);
                     finalString = finalString + appendString;
                     dataList.Add(finalString);
@@ -121,6 +128,33 @@ namespace TFRestApiApp
                 sendMail(reportType_2, dataList);
             }
 
+        }
+
+        /// <summary>
+        /// Get one work item with information about linked work items
+        /// </summary>
+        /// <param name="Id"></param>
+        /// <returns></returns>
+        static WorkItem GetWorkItemWithRelations(int Id)
+        {
+            return WitClient.GetWorkItemAsync(Id, expand: WorkItemExpand.Relations).Result;
+        }
+
+        static int ExtractWiIdFromUrl(string Url)
+        {
+            int id = -1;
+
+            string splitStr = "_apis/wit/workItems/";
+
+            if (Url.Contains(splitStr))
+            {
+                string[] strarr = Url.Split(new string[] { splitStr }, StringSplitOptions.RemoveEmptyEntries);
+
+                if (strarr.Length == 2 && int.TryParse(strarr[1], out id))
+                    return id;
+            }
+
+            return id;
         }
 
         /// <summary>
@@ -145,16 +179,58 @@ namespace TFRestApiApp
                         {
                             var wi = GetWorkItem(wiRef.Id);
                             appendString = wi.Id.ToString() + ",Feature Already Created";
+                            var wii = GetWorkItemWithRelations(wi.Id.Value);
+                            List<string> userStoriesList = new List<string>();
+                            foreach (var wiLink in wii.Relations)
+                            {
+                                if (wiLink.Rel.Equals("System.LinkTypes.Hierarchy-Forward"))
+                                {
+                                    int existId = ExtractWiIdFromUrl(wiLink.Url);
+                                    if (existId != -1)
+                                    {
+                                        var wiUserStory = GetWorkItem(existId);
+                                        if (wiUserStory.Fields["System.WorkItemType"].Equals("User Story"))
+                                        {
+                                            userStoriesList.Add(existId.ToString());
+                                        }
+                                    }
+                                }
+                            }
+                            if (userStoriesList.Count == 0)
+                            {
+                                appendString = appendString + CreateNewWorkitem(teamProject, workitemType, wi.Id.Value);
+                            }
+                            else
+                            {
+                                appendString = appendString + "," + string.Join(":", userStoriesList) + ",User Stories Already Created";
+                            }
                             Console.WriteLine(String.Format("{0} - {1} - {2}", wi.Id, wi.Fields["System.Title"].ToString(), wi.Fields["System.State"].ToString()));
                         }
+
+                        //if (result.WorkItemRelations != null)
+                        //{
+                        //    foreach (var wiRel in result.WorkItemRelations)
+                        //    {
+                        //        if (wiRel.Source == null)
+                        //        {
+                        //            var wi = GetWorkItem(wiRel.Target.Id);
+                        //            Console.WriteLine(String.Format("Top Level: {0} - {1}", wi.Id, wi.Fields["System.Title"].ToString()));
+                        //        }
+                        //        else
+                        //        {
+                        //            var wiParent = GetWorkItem(wiRel.Source.Id);
+                        //            var wiChild = GetWorkItem(wiRel.Target.Id);
+                        //            Console.WriteLine(String.Format("{0} --> {1} - {2}", wiParent.Id, wiChild.Id, wiChild.Fields["System.Title"].ToString()));
+                        //        }
+                        //    }
+                        //}
                     }
                     else //If workitem type feature not available based on Record id create the new feature
                     {
                         try
                         {
                             //Create Workitem Type Feature and Get the ID
-                            int bugId = CreateNewWorkitem(teamProject, workitemType);
-                            appendString = bugId.ToString() + ",Feature Newly Created";
+                            appendString = CreateNewWorkitem(teamProject, workitemType, -1);
                         }
                         catch (Exception ex)
                         {
@@ -163,59 +239,41 @@ namespace TFRestApiApp
                         }
                     }
                 }
-                else if (result.WorkItemRelations != null) // this is Tree of Work Items or Work Items and Direct Links
+                else
                 {
-                    foreach (var wiRel in result.WorkItemRelations)
-                    {
-                        if (wiRel.Source == null)
-                        {
-                            var wi = GetWorkItem(wiRel.Target.Id);
-                            Console.WriteLine(String.Format("Top Level: {0} - {1}", wi.Id, wi.Fields["System.Title"].ToString()));
-                        }
-                        else
-                        {
-                            var wiParent = GetWorkItem(wiRel.Source.Id);
-                            var wiChild = GetWorkItem(wiRel.Target.Id);
-                            Console.WriteLine(String.Format("{0} --> {1} - {2}", wiParent.Id, wiChild.Id, wiChild.Fields["System.Title"].ToString()));
-                        }
-                    }
+                    appendString = " , , , ,";
+                    Console.WriteLine("There is no query result");
                 }
-                else Console.WriteLine("There is no query result");
             }
             return appendString;
         }
 
         //Create New Workitem type
-        static int CreateNewWorkitem(String ProjectName, string WorkitemType)
+        static string CreateNewWorkitem(String ProjectName, string WorkitemType, int id)
         {
-            DataTable dt_AllNewRecordsInAIRT = connectAndGetDataFromAIRTDB(TN_NewRecordsInAIRT, ConfigurationManager.AppSettings["TodayRecordsInAIRT"]);
+            string finalTagString = getFinalTagString(RecordID);
+            string dataString = "";
+            int parentId;
+            int userStoryParentId;
 
-            DataRow[] rowsFiltered = dt_AllNewRecordsInAIRT.Select(WorkitemType_Feature_Title);
-
-            int parentId = 11242;
-
-            for (int i = 0; i < rowsFiltered.Length; i++)
+            //Verify the Parent Scenario ID Mappign Based on Group and Priority
+            if (shortcut_Group.Equals("CSEO"))
             {
-                //Get the Record id
-                RecordID = rowsFiltered[i]["Recid"].ToString();
+                if (Priority.Equals("3"))
+                {
+                    parentId = Convert.ToInt32(ConfigurationManager.AppSettings["Grade_Review_Parent_ScenarioId"]);
+                } else
+                {
+                    parentId = Convert.ToInt32(ConfigurationManager.AppSettings["CSEO_Group_Parent_ScenarioId"]);
+                }
+            } else
+            {
+                parentId = Convert.ToInt32(ConfigurationManager.AppSettings["NON_CSEO_Group_Parent_ScenarioId"]);
+            }
 
-                //Get the Group
-                Group = rowsFiltered[i]["Grp"].ToString();
-
-                //Group shortcut form 
-                shortcut_Group = string.Concat(Group.Where(c => c >= 'A' && c <= 'Z'));
-
-                //Get the subgorup
-                SubGroup = rowsFiltered[i]["SubGrp"].ToString();
-
-                //Sub Group Shortcut form
-                shortcut_SubGroup = string.Concat(SubGroup.Where(c => c >= 'A' && c <= 'Z'));
-
-                //Get the application name
-                ApplicationName = rowsFiltered[i]["NameDesc"].ToString();
-
-                WorkitemType_Feature_Title = "[RecID_" + RecordID + "]" + "[" + shortcut_Group + "]" + "[" + shortcut_SubGroup + "]" + ApplicationName;
-
+            if (id == -1)
+            {
+                string WorkitemType_Feature_Title = "[RecID_" + RecordID + "]" + "[" + shortcut_Group + "]" + "[" + shortcut_SubGroup + "]" + ApplicationName;
                 //Remove the empty [] expressions feature title that means when Grop or SubGroup or AppName not available 
                 var charsToRemove = new string[] { "[]" };
                 foreach (var c in charsToRemove)
@@ -225,9 +283,8 @@ namespace TFRestApiApp
                     Console.WriteLine("Workitem type Feature Generated for {0} record. the Title is {1}", RecordID, WorkitemType_Feature_Title);
                 }
 
-                //Get Application priority
-                Priority = rowsFiltered[i]["Priority"].ToString();
                 WokitemType_Feature_Tag_Priority = "P" + Priority;
+
 
                 //Create the AIRT New record URL 
                 NewRecordAirt_URL = AIRTPrtURL + RecordID;
@@ -235,49 +292,126 @@ namespace TFRestApiApp
                     WorkitemType_Feature_Tags = String.Concat(WokitemType_Feature_Tag_Priority, ";", WorkitemType_Feature_Tag_NewAIRTRec, ";", shortcut_Group);
                 else
                     WorkitemType_Feature_Tags = String.Concat(WorkitemType_Feature_Tag_NewAIRTRec, ";", shortcut_Group);
+
+                Dictionary<string, object> fields = new Dictionary<string, object>();
+                fields.Add("Title", WorkitemType_Feature_Title);
+                fields.Add("Tags", WorkitemType_Feature_Tags);
+                //fields.Add("Tags", WokitemType_Feature_Tag_Priority);
+                //fields.Add("Tags", WorkitemType_Feature_Tag_NewAIRTRec);
+                //fields.Add("Repro Steps", "<ol><li>Run app</li><li>Crash</li></ol>");
+                if (Priority != "" && Priority != null)
+                    fields.Add("Priority", Priority);
+                fields.Add("Description", "<p>You are receiving this notification because you have a new " +
+                    "AIRT record that was created based on its related Service Tree record.</p>" +
+                    "<ul><li><a href=" + NewRecordAirt_URL + ">" + RecordID + "</a></li></ul>" +
+                    "<ul><li>For this new AIRT record, we need you to review and fill out the details." +
+                    "Noting that with a record in edit mode, all grayed out fields are locked to Service Tree." +
+                    "To update those fields, you need to update the ST record.</li></ul>" +
+                    "<ul><li>· If this project has no UI (example, is a service), then please go into the related ST record and " +
+                    "update the Has UI field from Yes to No. Within 8 hours of doing that, this AIRT record will be deleted.</li>" +
+                    "<li>You can find the related ST component link from within this AIRT record, within the Service Tree Alignment section</li>" +
+                    "<li>AIRT record fields to update:</li>" +
+                    "<ul><li>Digital Property section: Review and set the Priority field based " +
+                    "on <a href=" + AIRTAppUrl + ">https://aka.ms/A11yPriorities.</a> Fill in the other required fields," +
+                    "like Internet Facing (Internal/External), Category, etc.</li>" +
+                    "<li>Organization Details section: Review and fill in fields, replacing any fields with ST New - Verify</li>" +
+                    "<li>Dependency Information section: If the project engineering is purely done by Engineers within CSEO, then " +
+                    "leave this section blank. Otherwise, please review and update with 1st party and/or 3rd party dependencies.</li>" +
+                    "<ul><li>Any Microsoft projects/applications/components that your project has a dependency on, " +
+                    "please add that as a 1st party dependency</li>" +
+                    "<li>Any non-Microsoft projects/applications/components that your project has a dependency on, " +
+                    "please add that as a 3rd party dependency.</li></ul>" +
+                    "<li>Assessment section: This is about Accessibility testing. If you’ve done some Accessibility testing, " +
+                    "please add that, along with supporting documentation as an attachment to the assessment. Example would be " +
+                    "running a fast pass on your web site, with Accessibility Insights</li></ul>" +
+                    "</ul><br/><p><b>Thanks</br>CSEO Engineering System</b></p>");
+
+                fields.Add("Assigned To", WorkitemType_Feature_AssignTo);
+                fields.Add("Business Value", 999);
+                var newBug = CreateWorkItem(ProjectName, WorkitemType, fields);
+                dataString = newBug.Id.Value.ToString() + ",Feature Newly Created";
+                if (parentId > 0)
+                {
+                    AddParentLink(newBug.Id.Value, parentId);
+                }
+                userStoryParentId = newBug.Id.Value;
+
+            }
+            else
+            {
+                userStoryParentId = id;
+            }
+            string usrStoryCreateTag = ConfigurationManager.AppSettings["userStoryCreationTag"];
+            if (usrStoryCreateTag.Equals("yes"))
+            {
+                Dictionary<string, object> usrStoryFields = new Dictionary<string, object>();
+                string WorkitemType_Feature_Title2 = "[RecID_" + RecordID + "]" + finalTagString + "[" + shortcut_Group + "]" + "[" + shortcut_SubGroup + "]" + ApplicationName;
+                var charsToRemove = new string[] { "[]" };
+                foreach (var c in charsToRemove)
+                {
+                    //Final Workitem type feature title
+                    WorkitemType_Feature_Title2 = WorkitemType_Feature_Title2.Replace(c, string.Empty);
+                    Console.WriteLine("Workitem type 2 Feature Generated for {0} record. the Title is {1}", RecordID, WorkitemType_Feature_Title2);
+                }
+                usrStoryFields.Add("Title", "[Assessment]" + WorkitemType_Feature_Title2);
+                if (Priority != "" && Priority != null)
+                    usrStoryFields.Add("Priority", Priority);
+                if (Priority != "" && Priority != null)
+                    WorkitemType_Feature_Tags = String.Concat(WokitemType_Feature_Tag_Priority, ";", shortcut_Group);
+                else
+                    WorkitemType_Feature_Tags = String.Concat(shortcut_Group);
+
+                if (Grade.Equals("C"))
+                {
+                    usrStoryFields.Add("Tags", WorkitemType_Feature_Tags + ";StayHealthy");
+                }
+                else
+                {
+                    usrStoryFields.Add("Tags", WorkitemType_Feature_Tags + ";GetHealthy");
+                }
+                var newUsrStory = CreateWorkItem(ProjectName, workitemType2, usrStoryFields);
+                dataString = dataString + "," + newUsrStory.Id.Value + ",User Story Newly Created";
+                if (newUsrStory.Id.Value > 0)
+                {
+                    AddParentLink(newUsrStory.Id.Value, userStoryParentId);
+                }
+            }
+            else
+            {
+                dataString = dataString + ",,User Story Not Created";
             }
 
-            Dictionary<string, object> fields = new Dictionary<string, object>();
-            fields.Add("Title", WorkitemType_Feature_Title);
-            fields.Add("Tags", WorkitemType_Feature_Tags);
-            //fields.Add("Tags", WokitemType_Feature_Tag_Priority);
-            //fields.Add("Tags", WorkitemType_Feature_Tag_NewAIRTRec);
-            //fields.Add("Repro Steps", "<ol><li>Run app</li><li>Crash</li></ol>");
-            if (Priority != "" && Priority != null)
-                fields.Add("Priority", Priority);
-            fields.Add("Description", "<p>You are receiving this notification because you have a new " +
-                "AIRT record that was created based on its related Service Tree record.</p>" +
-                "<ul><li><a href=" + NewRecordAirt_URL + ">" + RecordID + "</a></li></ul>" +
-                "<ul><li>For this new AIRT record, we need you to review and fill out the details." +
-                "Noting that with a record in edit mode, all grayed out fields are locked to Service Tree." +
-                "To update those fields, you need to update the ST record.</li></ul>" +
-                "<ul><li>· If this project has no UI (example, is a service), then please go into the related ST record and " +
-                "update the Has UI field from Yes to No. Within 8 hours of doing that, this AIRT record will be deleted.</li>" +
-                "<li>You can find the related ST component link from within this AIRT record, within the Service Tree Alignment section</li>" +
-                "<li>AIRT record fields to update:</li>" +
-                "<ul><li>Digital Property section: Review and set the Priority field based " +
-                "on <a href=" + AIRTAppUrl + ">https://aka.ms/A11yPriorities.</a> Fill in the other required fields," +
-                "like Internet Facing (Internal/External), Category, etc.</li>" +
-                "<li>Organization Details section: Review and fill in fields, replacing any fields with ST New - Verify</li>" +
-                "<li>Dependency Information section: If the project engineering is purely done by Engineers within CSEO, then " +
-                "leave this section blank. Otherwise, please review and update with 1st party and/or 3rd party dependencies.</li>" +
-                "<ul><li>Any Microsoft projects/applications/components that your project has a dependency on, " +
-                "please add that as a 1st party dependency</li>" +
-                "<li>Any non-Microsoft projects/applications/components that your project has a dependency on, " +
-                "please add that as a 3rd party dependency.</li></ul>" +
-                "<li>Assessment section: This is about Accessibility testing. If you’ve done some Accessibility testing, " +
-                "please add that, along with supporting documentation as an attachment to the assessment. Example would be " +
-                "running a fast pass on your web site, with Accessibility Insights</li></ul>" +
-                "</ul><br/><p><b>Thanks</br>CSEO Engineering System</b></p>");
-
-            fields.Add("Assigned To", WorkitemType_Feature_AssignTo);
-            fields.Add("Business Value", 999);
-            var newBug = CreateWorkItem(ProjectName, WorkitemType, fields);
-            if (parentId > 0) AddParentLink(newBug.Id.Value, parentId);
-            return newBug.Id.Value;
+            return dataString;
         }
 
+        static String getFinalTagString(String RecordId)
+        {
+            DataTable dt_AllNewRecordsInAIRT = connectAndGetDataFromAIRTDB(TN_NewRecordsInAIRT, "SELECT STUFF((SELECT ',' + CONVERT(varchar(10),TagId) FROM [dbo].[InvTagMapping] invTagMap  where invTagMap.isDeleted = 0 and invTagMap.RecId = '" + RecordID + "' FOR XML PATH('')) ,1,1,'') TagIds");
+            string tagMapString = "";
+            string finalTagString = "";
+            Object tagObj = dt_AllNewRecordsInAIRT.Rows[0]["TagIds"];
+            if (tagObj != null && !DBNull.Value.Equals(tagObj))
+            {
+                tagMapString = tagObj.ToString();
+            }
 
+            if (!tagMapString.Equals(""))
+            {
+                if (tagMapString.Contains(","))
+                {
+                    String[] tagArray = tagMapString.Split(',');
+                    foreach (string tagString in tagArray)
+                    {
+                        finalTagString = finalTagString + "[" + ConfigurationManager.AppSettings[tagString] + "]";
+                    }
+                }
+                else
+                {
+                    finalTagString = "[" + ConfigurationManager.AppSettings[tagMapString] + "]";
+                }
+            }
+            return finalTagString;
+        }
         /// <summary>
         /// Add new parent link to existing work item
         /// </summary>
@@ -456,10 +590,10 @@ namespace TFRestApiApp
                 builder.Append(" <span>CSEO Assessment Services : No Features Created in ADO</span>");
                 builder.Append("</div></div>");
                 builder.Append("<h2>Contact us</h2>");
-                builder.Append("<span><a href='#'>CSEO Accessibility Team</a></span>");
+                builder.Append("<span><a href='mailto:CSEOA11yteam@microsoft.com?Subject=CSEO%20Accessibiltiy%20Services'>CSEO Accessibility Team</a></span>");
                 builder.Append("<span>CSEO Studio Accessibility</span> ");
                 builder.Append("</div>");
-                builder.Append("<div class='footer' style='background:#A49F9E;'><span class='foot-content'>Visit our <a href='#'>Accessibility Hub website</a> to learn more.</span></div>");
+                builder.Append("<div class='footer' style='background:#A49F9E;'><span class='foot-content'>Visit our <a href='https://microsoft.sharepoint.com/teams/meconnection/SitePages/Accessibility.aspx'>Accessibility Hub website</a> to learn more.</span></div>");
                 builder.Append(" </div>");
                 builder.Append(" </div>");
                 builder.Append("</body>");
@@ -485,7 +619,7 @@ namespace TFRestApiApp
                 builder.Append("<div class='img'><svg aria-hidden='true' focusable='false' data-prefix='fab' data-icon='microsoft' role='img' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 448 512' class='svg-inline--fa fa-microsoft fa-w-14 fa-3x'><path fill='currentColor' d='M0 32h214.6v214.6H0V32zm233.4 0H448v214.6H233.4V32zM0 265.4h214.6V480H0V265.4zm233.4 0H448V480H233.4V265.4z' class=''></path></svg></div>");
                 builder.Append("</div>");
                 builder.Append("<div class='right-logo'>");
-                builder.Append(" <span>CSEO Assessment Services</span>");
+                //builder.Append(" <span>CSEO Assessment Services</span><br>");
                 builder.Append("</div></div>");
                 builder.Append("<br><br>");
                 builder.Append(" <div class='header-down'>");
@@ -493,59 +627,18 @@ namespace TFRestApiApp
                 builder.Append("<div class='img'>");
                 builder.Append("<svg xmlns='http://www.w3.org/2000/svg' id='Layer_3' enable-background='new 0 0 64 64'viewBox='0 0 64 64'><g><path d='m20.042 29.373c5.944-5.944 9.409-13.701 9.893-22.023l26.716 26.716c-8.323.484-16.08 3.95-22.023 9.894l-2.628 2.626-14.586-14.586zm8.958 20.213-14.586-14.586 1.586-1.586 14.586 14.586zm-12 11-13.586-13.586 1.586-1.586 13.586 13.586zm-8.586-14.586 1.586-1.586 9.586 9.586-1.586 1.586zm16.758 7.414c-.372.373-.888.586-1.414.586h-.516c-.526 0-1.042-.213-1.414-.586l-11.242-11.242c-.378-.379-.586-.881-.586-1.415v-.515c0-.534.208-1.036.586-1.415l2.414-2.413 14.586 14.586zm13.535 3.293 3.293-3.293 1.586 1.586-5.586 5.586-8.586-8.586 3.586-3.586 5.586 5.586-1.293 1.293zm-1.707-7.121-2.586-2.586.856-.856 3.878 1.293zm22-16-28.586-28.586 1.586-1.586 28.586 28.586z'/><path d='m51.169 13h11.662v2h-11.662z' transform='matrix(.858 -.515 .515 .858 .92 31.321)'/><path d='m44.169 6h11.662v2h-11.662z' transform='matrix(.515 -.857 .857 .515 18.266 46.268)'/></g></svg>");
                 builder.Append("</div>");
-                //builder.Append("Action required ");
                 builder.Append("</div>");
-                //builder.Append("<div class='right-side'>");
-                //builder.Append("<p>Date/Time: <span id='datetime'>"+ System.DateTime.Now.ToShortDateString() + " " + System.DateTime.Now.ToShortTimeString() +"</span></p>");
-                //builder.Append("<script>");
-                //builder.Append("var dt = new Date();");
-                //builder.Append("document.getElementById('datetime').innerHTML=dt.toLocaleString();");
-                //builder.Append("</script> ");
-                //builder.Append("</div>");
                 builder.Append("</div>");
-                //builder.Append(" <h1 class='headreview'>Newly Created Features </h1>");
-                //builder.Append(" <div class='separator'></div> ");
-                //builder.Append(" <p>Below listed bugs missing the required tags to distinguish whether they belongs to CSEO Engineering team or should go to Product Group in Microsoft or should go to Third Party Supplier(s).");
-                //builder.Append("Please go thorugh <a href='https://microsoft.sharepoint.com/teams/meconnection/SitePages/Accessibility-Tags.aspx' target='_blank'>CSEO Accessibility Bug Tagging Guidelines</a> for more details</p>");
-                //builder.Append("<h2>Required Tags for Dependency distingution</h2>");
-                //builder.Append("<table style='width: 100%'>");
-                //builder.Append("<tr>");
-                //builder.Append("<th><b>Tag</b></th>");
-                //builder.Append("<th><b>Description</b></th>");
-                //builder.Append(" <th><b>Example</b></th>");
-                //builder.Append("</tr>");
-                //builder.Append("<tr>");
-                //builder.Append("<td >A11y-COREDEV</td>");
-                //builder.Append(" <td>For any Core Development Team bug</td>");
-                //builder.Append("<td></td>");
-                //builder.Append("</tr>");
-                //builder.Append(" <tr>");
-                //builder.Append("<td>A11y-1STPARTY</td>");
-                //builder.Append(" <td>For any 1st party bug (MS Product Group)</td>");
-                //builder.Append(" <td>MS Product Groups include: SharePoint, Dynamics, Teams</td>");
-                //builder.Append("</tr>");
-                //builder.Append("<tr>");
-                //builder.Append("<td>FirstParty_[DependencyName]</td>");
-                //builder.Append("<td>Additional 1st party tag, naming the actual 1st party</td>");
-                //builder.Append("</br>");
-                //builder.Append("<td>FirstParty_SPO (for Share Point Online)</br>FirstParty_PowerBI (for Power BI)</br>FirstParty_PowerApps (for Power apps)</br>");
-                //builder.Append("For a complete list, consult the full list of 1st party products</td>");
-                //builder.Append("</tr>");
-                //builder.Append("<tr>");
-                //builder.Append(" <td>A11y-3RDPARTY</td>");
-                //builder.Append("<td>For any 3rd party bug</td>");
-                //builder.Append(" <td>3rd party examples include:</br>SAP</br>Fidelity</br>YouTube</td>");
-                //builder.Append("</tr>");
-                //builder.Append(" <tr>");
-                //builder.Append("<td>ThirdParty_[DependencyName]</td>");
-                //builder.Append("<td>Additional 3rd party tag, naming the actual 3rd party</td>");
-                //builder.Append(" <td>ThirdParty_SAP (for SAP)</br>");
-                //builder.Append(" ThirdParty_Adobe (for Adobe)</br>");
-                //builder.Append(" ThirdParty_ServiceNow (for Service Now)</td>");
-                //builder.Append("</tr>");
-                //builder.Append("</table>");
+                builder.Append("Hi All,<br/><br/>");
+                builder.Append("<p>The <b>CSEO ADO Workitems creater automated tool</b>, creates a new features for the newly created AIRT ID (record) if it doesn’t exist already. The feature will be a child to the below Scenarios : " +
+                    "<ul><li><p><a href='https://microsoftit.visualstudio.com/OneITVSO/_workitems/edit/4889949'>SCENARIO 4889949</a>[Assessment] Plan and execute Assessments for CSEO applications. It will as well add a child link UserStory to the that feature.</p></li>" +
+                    "<li><p><a href='https://microsoftit.visualstudio.com/OneITVSO/_workitems/edit/4889951'>SCENARIO 4889951</a>[Assessment] Assist Non-CSEO organizations with Assessment tasks. It will as well add a child link UserStory to the that feature.</p></li>" +
+                    "<li><p><a href='https://microsoftit.visualstudio.com/OneITVSO/_workitems/edit/5324882'>SCENARIO 5324882</a>[Grade Review] Plan and Execute CSEO P3 Applications Grade Reviews. It will as well add a child link UserStory to the that feature</p></li>" +
+                    "</ul>" +
+                    "");
+                builder.Append("<p>P.S – you need to manually define the iteration for the Feature/UserStory created above. The tag GetHealthy/StayHealthy will be added automatically by the tool.</p>");
                 builder.Append("<h2>Newly Created ADO Features</h2>");
-                builder.Append(" <table style='width: 100%'>");
+                builder.Append("<table style='width: 100%'>");
                 builder.Append("<tr>");
                 builder.Append("<th><b>RecID</b></th>");
                 builder.Append("<th><b>Application Name</b></th>");
@@ -556,33 +649,56 @@ namespace TFRestApiApp
                 builder.Append("<th><b>Grade</b></th>");
                 builder.Append("<th><b>ADO Feature Id</b></th>");
                 builder.Append("<th><b>Comments</b></th>");
+                builder.Append("<th><b>ADO UserStory Id</b></th>");
+                builder.Append("<th><b>Comments</b></th>");
                 builder.Append("</tr>");
 
-                foreach (string dataString in dataList)
+                if (dataList != null)
                 {
-                    string[] dataArray = dataString.Split(',');
-                    builder.Append("<tr>");
-                    builder.Append("<td><a href='https://airt.azurewebsites.net/InventoryDetails/" + dataArray[0] +"'>"+ dataArray[0] + "</a> </td>");
-                    builder.Append("<td>" + dataArray[1] + "</td>");
-                    builder.Append("<td>" + dataArray[2] + "</td>");
-                    builder.Append("<td>" + dataArray[3] + "</td>");
-                    builder.Append("<td>" + dataArray[4] + "</td>");
-                    builder.Append("<td>" + dataArray[5] + "</td>");
-                    builder.Append("<td>" + dataArray[6] + "</td>");
-                    builder.Append("<td><a href='https://smsgaccessibilityreviews.visualstudio.com/CDSVSO/_workitems/edit/" + dataArray[7] + "'>" + dataArray[7] + "</a> </td>");
-                    builder.Append("<td>" + dataArray[8] + "</td>");
-                    builder.Append("</tr>");
+                    foreach (string dataString in dataList)
+                    {
+                        string[] dataArray = dataString.Split(',');
+                        builder.Append("<tr>");
+                        builder.Append("<td><a href='https://airt.azurewebsites.net/InventoryDetails/" + dataArray[0] + "'>" + dataArray[0] + "</a> </td>");
+                        builder.Append("<td>" + dataArray[1] + "</td>");
+                        builder.Append("<td>" + dataArray[2] + "</td>");
+                        builder.Append("<td>" + dataArray[3] + "</td>");
+                        builder.Append("<td>" + dataArray[4] + "</td>");
+                        builder.Append("<td>" + dataArray[5] + "</td>");
+                        builder.Append("<td>" + dataArray[6] + "</td>");
+                        builder.Append("<td><center><a href='https://smsgaccessibilityreviews.visualstudio.com/CDSVSO/_workitems/edit/" + dataArray[7] + "'>" + dataArray[7] + "</a></center></td>");
+                        builder.Append("<td>" + dataArray[8] + "</td>");
+                        if (dataArray[9].Contains(":"))
+                        {
+                            builder.Append("<td><center>");
+                            String[] tagArray = dataArray[9].Split(':');
+                            foreach (string tagString in tagArray)
+                            {
+                                builder.Append("<a href='https://smsgaccessibilityreviews.visualstudio.com/CDSVSO/_workitems/edit/" + tagString + "'>" + tagString + "</a><br>");
+                            }
+                            builder.Append("</center></td>");
+                        }
+                        else
+                        {
+                            builder.Append("<td><center><a href='https://smsgaccessibilityreviews.visualstudio.com/CDSVSO/_workitems/edit/" + dataArray[9] + "'>" + dataArray[9] + "</a></center></td>");
+                        }
+
+                        builder.Append("<td>" + dataArray[10] + "</td>");
+                        builder.Append("</tr>");
+                    }
                 }
                 builder.Append("</table>");
-                builder.Append("<h2>Next steps and checklist</h2>");
+                builder.Append("<br><p>For the above UserStory, you need to create two tasks.(E.g. sample tasks below). One for onboarding and other for assessment.</p>");
+                //builder.Append("<h2>Next steps and checklist</h2>");
                 builder.Append("<ul>");
-                builder.Append("<li>Go to your AIRT record: <a href='#'>6647</a></li>");
-                builder.Append("<li>Provide next steps</li>");
+                builder.Append("<li>Task1 => [Activity:Onboarding][2002][RecID_1491][CFE] Succession Planning</li>");
+                builder.Append("<li>Task2 => [Activity:Assessment][2002][RecID_1491][CFE] Succession Planning</li>");
                 builder.Append("</ul>");
+                builder.Append("<p>Please add the tags as well define the iterations for the tasks.</p>");
                 builder.Append("<div style='display:grid;background:#cac4c4;margin-left: -15px;margin-right:-15px;padding-left: 15px;padding-right: 15px;'>");
                 builder.Append("<h2>Contact us</h2>");
                 builder.Append("<span><a href='#'>CSEO Accessibility Team</a></span>");
-                builder.Append("<span>CSEO Studio Accessibility</span> ");
+                //builder.Append("<span>CSEO Studio Accessibility</span> ");
                 builder.Append("</div>");
                 builder.Append("<div class='footer' style='background:#A49F9E;'><span class='foot-content'>Visit our <a href='#'>Accessibility Hub website</a> to learn more.</span></div>");
                 builder.Append(" </div>");
@@ -592,15 +708,13 @@ namespace TFRestApiApp
                 oMsg.Subject = "CSEO Accessbility Services - Newly Created Features in ADO : " + System.DateTime.Now.ToShortDateString() + " " + System.DateTime.Now.ToShortTimeString();
             }
             string HtmlFile = builder.ToString();
-            
+
             /* Live */
-            //oMsg.To = ConfigurationManager.AppSettings["DftSendMailTo"];
-            //oMsg.CC = ConfigurationManager.AppSettings["DftSendMailCC"];
-            /* QA*/
-            oMsg.To = "v-chvak@microsoft.com";
-            
+            oMsg.To = ConfigurationManager.AppSettings["DftSendMailTo"];
+            oMsg.CC = ConfigurationManager.AppSettings["DftSendMailCC"];
+
             oMsg.HTMLBody = HtmlFile;
-            Console.WriteLine("Bugs report excel attached sending mail to CSEO group team");
+            Console.WriteLine("ADO Features are created and sent mail to respective folks");
             oMsg.Send();
         }
         #endregion
@@ -612,7 +726,7 @@ namespace TFRestApiApp
             System.Data.DataTable dt = new System.Data.DataTable();
             SqlCommand cmd = new SqlCommand();
             string dbConn = null;
-            dbConn = @"";
+            dbConn = "";
             cmd.CommandText = QueryName;
             Console.WriteLine("Executes {0}", QueryName);
             SqlConnection sqlConnection1 = new SqlConnection(dbConn);

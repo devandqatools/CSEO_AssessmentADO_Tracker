@@ -1,3 +1,5 @@
+D:\Development\CSEO_AssessmentADO_Tracker\01.TFRestApiApp\TFRestApiApp\bin\Debug\it\Microsoft.VisualStudio.Services.WebApi.resources.dll
+D:\Development\CSEO_AssessmentADO_Tracker\01.TFRestApiApp\TFRestApiApp\bin\Debug\pl\Microsoft.VisualStudio.Services.WebApi.resources.dll
 D:\Development\CSEO_AssessmentADO_Tracker\01.TFRestApiApp\TFRestApiApp\bin\Debug\TFRestApiApp.exe.config
 D:\Development\CSEO_AssessmentADO_Tracker\01.TFRestApiApp\TFRestApiApp\bin\Debug\TFRestApiApp.exe
 D:\Development\CSEO_AssessmentADO_Tracker\01.TFRestApiApp\TFRestApiApp\bin\Debug\TFRestApiApp.pdb
@@ -87,16 +89,13 @@ D:\Development\CSEO_AssessmentADO_Tracker\01.TFRestApiApp\TFRestApiApp\bin\Debug
 D:\Development\CSEO_AssessmentADO_Tracker\01.TFRestApiApp\TFRestApiApp\bin\Debug\de\Microsoft.VisualStudio.Services.WebApi.resources.dll
 D:\Development\CSEO_AssessmentADO_Tracker\01.TFRestApiApp\TFRestApiApp\bin\Debug\es\Microsoft.VisualStudio.Services.WebApi.resources.dll
 D:\Development\CSEO_AssessmentADO_Tracker\01.TFRestApiApp\TFRestApiApp\bin\Debug\fr\Microsoft.VisualStudio.Services.WebApi.resources.dll
-D:\Development\CSEO_AssessmentADO_Tracker\01.TFRestApiApp\TFRestApiApp\bin\Debug\it\Microsoft.VisualStudio.Services.WebApi.resources.dll
 D:\Development\CSEO_AssessmentADO_Tracker\01.TFRestApiApp\TFRestApiApp\bin\Debug\ja\Microsoft.VisualStudio.Services.WebApi.resources.dll
 D:\Development\CSEO_AssessmentADO_Tracker\01.TFRestApiApp\TFRestApiApp\bin\Debug\ko\Microsoft.VisualStudio.Services.WebApi.resources.dll
-D:\Development\CSEO_AssessmentADO_Tracker\01.TFRestApiApp\TFRestApiApp\bin\Debug\pl\Microsoft.VisualStudio.Services.WebApi.resources.dll
 D:\Development\CSEO_AssessmentADO_Tracker\01.TFRestApiApp\TFRestApiApp\bin\Debug\pt-BR\Microsoft.VisualStudio.Services.WebApi.resources.dll
 D:\Development\CSEO_AssessmentADO_Tracker\01.TFRestApiApp\TFRestApiApp\bin\Debug\ru\Microsoft.VisualStudio.Services.WebApi.resources.dll
 D:\Development\CSEO_AssessmentADO_Tracker\01.TFRestApiApp\TFRestApiApp\bin\Debug\tr\Microsoft.VisualStudio.Services.WebApi.resources.dll
 D:\Development\CSEO_AssessmentADO_Tracker\01.TFRestApiApp\TFRestApiApp\bin\Debug\zh-Hans\Microsoft.VisualStudio.Services.WebApi.resources.dll
 D:\Development\CSEO_AssessmentADO_Tracker\01.TFRestApiApp\TFRestApiApp\bin\Debug\zh-Hant\Microsoft.VisualStudio.Services.WebApi.resources.dll
-D:\Development\CSEO_AssessmentADO_Tracker\01.TFRestApiApp\TFRestApiApp\obj\Debug\CSEO_ADORestApiApp.csprojAssemblyReference.cache
 D:\Development\CSEO_AssessmentADO_Tracker\01.TFRestApiApp\TFRestApiApp\obj\Debug\CSEO_ADORestApiApp.csproj.CoreCompileInputs.cache
 D:\Development\CSEO_AssessmentADO_Tracker\01.TFRestApiApp\TFRestApiApp\obj\Debug\CSEO_ADORestApiApp.csproj.CopyComplete
 D:\Development\CSEO_AssessmentADO_Tracker\01.TFRestApiApp\TFRestApiApp\obj\Debug\TFRestApiApp.exe
