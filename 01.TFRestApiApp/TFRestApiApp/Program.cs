@@ -21,11 +21,11 @@ namespace TFRestApiApp
 {
     class Program
     {
-        static readonly string TFUrl = "https://smsgaccessibilityreviews.visualstudio.com/";
+        static readonly string TFUrl = "https://microsoftit.visualstudio.com/"; //Prod:https://microsoftit.visualstudio.com/ ; QA:https://smsgaccessibilityreviews.visualstudio.com
         static readonly string UserAccount = "";
         static readonly string UserPassword = "";
         static readonly string UserPAT = "";
-        static readonly string teamProject = "CDSVSO";
+        static readonly string teamProject = "OneITVSO"; //Prod: OneITVSO ; QA:CDSVSO
         static readonly string workitemType = "Feature";
         static readonly string workitemType2 = "User Story";
 
@@ -45,13 +45,14 @@ namespace TFRestApiApp
         public static string Group;
         public static string SubGroup;
         public static string ApplicationName;
+        public static string ComponentID;
         public static string Priority;
-        public static string AreaPath = "CDSVSO"; //For QA area path is 'CDSVSO' for Dev Area path is 'OneITVSO\Shared Experiences\Studio\Accessibility\Accessibility PM'
+        public static string AreaPath = "OneITVSO\\Shared Experiences\\Studio\\Accessibility\\Accessibility PM"; //QA: CDSVSO Prod: OneITVSO\Shared Experiences\Studio\Accessibility\Accessibility PM
         public static string shortcut_SubGroup;
         public static string shortcut_Group;
         public static string WorkitemType_Feature_Tag_NewAIRTRec = "NewAIRTRec";
         public static string WokitemType_Feature_Tag_Priority;
-        public static string WorkitemType_Feature_AssignTo = "v-chvak@microsoft.com";
+        public static string WorkitemType_Feature_AssignTo = "v-chvak@microsoft.com";//"chaseco@microsoft.com;v-juew@microsoft.com;v-chvak@microsoft.com;v-chkov@microsoft.com;v-parama@microsoft.com";
 
         public static string NewRecordAirt_URL;
         public static string AIRTPrtURL = "https://airt.azurewebsites.net/InventoryDetails/";
@@ -67,7 +68,7 @@ namespace TFRestApiApp
         static void Main(string[] args)
         {
             string applicationType = ConfigurationManager.AppSettings["ApplicationType"];
-            Console.WriteLine("<=========CSEO Accessbility Assessments ADO Features automater Creater Started=========>");
+            Console.WriteLine("CSEO Accessbility Assessments ADO Features automater Creater Started......!");
             ConnectWithPAT(TFUrl, UserPAT);
             string recid_Pattern = "'RecID_";
 
@@ -75,7 +76,7 @@ namespace TFRestApiApp
 
             if (dtTotalAppNames.Rows.Count == 0)
             {
-                Console.WriteLine("//====//====//====Today New records not created in AIRT====//====//====//");
+                Console.WriteLine("Today New records not created in AIRT.....!");
                 sendMail(reportType_1, null);
             }
             else
@@ -88,6 +89,7 @@ namespace TFRestApiApp
                 {
                     string finalString = "";
                     string nameDesc = "";
+                    string componentID = "";
                     string createdDt = "";
                     string grp = "";
                     string subGrp = "";
@@ -98,6 +100,8 @@ namespace TFRestApiApp
                         nameDesc = (string)row["NameDesc"];
                     if (!DBNull.Value.Equals(row["CreatedDt"]))
                         createdDt = (string)row["CreatedDt"].ToString();
+                    if (!DBNull.Value.Equals(row["ComponentID"]))
+                        componentID = (string)row["ComponentID"].ToString();
                     if (!DBNull.Value.Equals(row["Grp"]))
                         grp = (string)row["Grp"];
                     if (!DBNull.Value.Equals(row["SubGrp"]))
@@ -106,7 +110,7 @@ namespace TFRestApiApp
                         priority = (string)row["Priority"].ToString();
                     if (!DBNull.Value.Equals(row["Grade"]))
                         grade = (string)row["Grade"];
-                    finalString = newRecid.ToString() + "," + nameDesc + "," + createdDt + "," + grp + "," + subGrp + "," + priority + "," + grade + ",";
+                    finalString = newRecid.ToString() + "," + nameDesc + "," + componentID + "," + createdDt + "," + grp + "," + subGrp + "," + priority + "," + grade + ",";
                     //Get active ADO features based on record id
                     string queryWiqlList = @"SELECT [System.Id] FROM WorkItems WHERE [System.TeamProject] = @project" +
                     " and [System.WorkItemType] = 'Feature' and [System.Title] Contains Words " +
@@ -118,6 +122,7 @@ namespace TFRestApiApp
                     Group = grp;
                     SubGroup = subGrp;
                     ApplicationName = nameDesc;
+                    ComponentID = componentID;
                     Priority = priority;
                     shortcut_Group = string.Concat(Group.Where(c => c >= 'A' && c <= 'Z'));
                     shortcut_SubGroup = string.Concat(SubGroup.Where(c => c >= 'A' && c <= 'Z'));
@@ -262,11 +267,13 @@ namespace TFRestApiApp
                 if (Priority.Equals("3"))
                 {
                     parentId = Convert.ToInt32(ConfigurationManager.AppSettings["Grade_Review_Parent_ScenarioId"]);
-                } else
+                }
+                else
                 {
                     parentId = Convert.ToInt32(ConfigurationManager.AppSettings["CSEO_Group_Parent_ScenarioId"]);
                 }
-            } else
+            }
+            else
             {
                 parentId = Convert.ToInt32(ConfigurationManager.AppSettings["NON_CSEO_Group_Parent_ScenarioId"]);
             }
@@ -289,9 +296,9 @@ namespace TFRestApiApp
                 //Create the AIRT New record URL 
                 NewRecordAirt_URL = AIRTPrtURL + RecordID;
                 if (Priority != "" && Priority != null)
-                    WorkitemType_Feature_Tags = String.Concat(WokitemType_Feature_Tag_Priority, ";", WorkitemType_Feature_Tag_NewAIRTRec, ";", shortcut_Group);
+                    WorkitemType_Feature_Tags = String.Concat(WokitemType_Feature_Tag_Priority, ";", WorkitemType_Feature_Tag_NewAIRTRec, ";", shortcut_Group, ";", shortcut_SubGroup);
                 else
-                    WorkitemType_Feature_Tags = String.Concat(WorkitemType_Feature_Tag_NewAIRTRec, ";", shortcut_Group);
+                    WorkitemType_Feature_Tags = String.Concat(WorkitemType_Feature_Tag_NewAIRTRec, ";", shortcut_Group, ";", shortcut_SubGroup);
 
                 Dictionary<string, object> fields = new Dictionary<string, object>();
                 fields.Add("Title", WorkitemType_Feature_Title);
@@ -328,6 +335,7 @@ namespace TFRestApiApp
 
                 fields.Add("Assigned To", WorkitemType_Feature_AssignTo);
                 fields.Add("Business Value", 999);
+                fields.Add("Area Path", AreaPath);
                 var newBug = CreateWorkItem(ProjectName, WorkitemType, fields);
                 dataString = newBug.Id.Value.ToString() + ",Feature Newly Created";
                 if (parentId > 0)
@@ -357,9 +365,9 @@ namespace TFRestApiApp
                 if (Priority != "" && Priority != null)
                     usrStoryFields.Add("Priority", Priority);
                 if (Priority != "" && Priority != null)
-                    WorkitemType_Feature_Tags = String.Concat(WokitemType_Feature_Tag_Priority, ";", shortcut_Group);
+                    WorkitemType_Feature_Tags = String.Concat(WokitemType_Feature_Tag_Priority, ";", shortcut_Group, ";", shortcut_SubGroup);
                 else
-                    WorkitemType_Feature_Tags = String.Concat(shortcut_Group);
+                    WorkitemType_Feature_Tags = String.Concat(shortcut_Group, ";", shortcut_SubGroup);
 
                 if (Grade.Equals("C"))
                 {
@@ -369,6 +377,8 @@ namespace TFRestApiApp
                 {
                     usrStoryFields.Add("Tags", WorkitemType_Feature_Tags + ";GetHealthy");
                 }
+                usrStoryFields.Add("Area Path", AreaPath);
+
                 var newUsrStory = CreateWorkItem(ProjectName, workitemType2, usrStoryFields);
                 dataString = dataString + "," + newUsrStory.Id.Value + ",User Story Newly Created";
                 if (newUsrStory.Id.Value > 0)
@@ -642,6 +652,7 @@ namespace TFRestApiApp
                 builder.Append("<tr>");
                 builder.Append("<th><b>RecID</b></th>");
                 builder.Append("<th><b>Application Name</b></th>");
+                builder.Append("<th><b>Component ID</b></th>");
                 builder.Append("<th><b>Created Date</b></th>");
                 builder.Append("<th><b>Group</b></th>");
                 builder.Append("<th><b>Sub Group</b></th>");
@@ -666,24 +677,25 @@ namespace TFRestApiApp
                         builder.Append("<td>" + dataArray[4] + "</td>");
                         builder.Append("<td>" + dataArray[5] + "</td>");
                         builder.Append("<td>" + dataArray[6] + "</td>");
-                        builder.Append("<td><center><a href='https://smsgaccessibilityreviews.visualstudio.com/CDSVSO/_workitems/edit/" + dataArray[7] + "'>" + dataArray[7] + "</a></center></td>");
-                        builder.Append("<td>" + dataArray[8] + "</td>");
-                        if (dataArray[9].Contains(":"))
+                        builder.Append("<td>" + dataArray[7] + "</td>");
+                        builder.Append("<td><center><a href='https://microsoftit.visualstudio.com/OneITVSO/_workitems/edit/" + dataArray[8] + "'>" + dataArray[8] + "</a></center></td>");
+                        builder.Append("<td>" + dataArray[9] + "</td>");
+                        if (dataArray[10].Contains(":"))
                         {
                             builder.Append("<td><center>");
-                            String[] tagArray = dataArray[9].Split(':');
+                            String[] tagArray = dataArray[10].Split(':');
                             foreach (string tagString in tagArray)
                             {
-                                builder.Append("<a href='https://smsgaccessibilityreviews.visualstudio.com/CDSVSO/_workitems/edit/" + tagString + "'>" + tagString + "</a><br>");
+                                builder.Append("<a href='https://microsoftit.visualstudio.com/OneITVSO/_workitems/edit/" + tagString + "'>" + tagString + "</a><br>");
                             }
                             builder.Append("</center></td>");
                         }
                         else
                         {
-                            builder.Append("<td><center><a href='https://smsgaccessibilityreviews.visualstudio.com/CDSVSO/_workitems/edit/" + dataArray[9] + "'>" + dataArray[9] + "</a></center></td>");
+                            builder.Append("<td><center><a href='https://microsoftit.visualstudio.com/OneITVSO/_workitems/edit/" + dataArray[10] + "'>" + dataArray[10] + "</a></center></td>");
                         }
 
-                        builder.Append("<td>" + dataArray[10] + "</td>");
+                        builder.Append("<td>" + dataArray[11] + "</td>");
                         builder.Append("</tr>");
                     }
                 }
@@ -726,7 +738,7 @@ namespace TFRestApiApp
             System.Data.DataTable dt = new System.Data.DataTable();
             SqlCommand cmd = new SqlCommand();
             string dbConn = null;
-            dbConn = "";
+            dbConn = @"Data Source = ";
             cmd.CommandText = QueryName;
             Console.WriteLine("Executes {0}", QueryName);
             SqlConnection sqlConnection1 = new SqlConnection(dbConn);
