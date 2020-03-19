@@ -21,11 +21,23 @@ namespace TFRestApiApp
 {
     class Program
     {
-        static readonly string TFUrl = "https://microsoftit.visualstudio.com/"; //Prod:https://microsoftit.visualstudio.com/ ; QA:https://smsgaccessibilityreviews.visualstudio.com
+
+
+        /*Prod*/
+        static readonly string UserPAT = "";
+        static readonly string TFUrl = "https://microsoftit.visualstudio.com/";
+        static readonly string teamProject = "OneITVSO";
+        public static string AreaPath = "OneITVSO\\Shared Experiences\\Studio\\Accessibility\\Accessibility PM";
+
+        /*QA*/
+        //static readonly string UserPAT = "";
+        //static readonly string TFUrl = "https://smsgaccessibilityreviews.visualstudio.com"
+        //static readonly string teamProject = "CDSVSO";
+        //public static string AreaPath = "CDSVSO";
+
         static readonly string UserAccount = "";
         static readonly string UserPassword = "";
-        static readonly string UserPAT = "";
-        static readonly string teamProject = "OneITVSO"; //Prod: OneITVSO ; QA:CDSVSO
+       
         static readonly string workitemType = "Feature";
         static readonly string workitemType2 = "User Story";
 
@@ -47,7 +59,7 @@ namespace TFRestApiApp
         public static string ApplicationName;
         public static string ComponentID;
         public static string Priority;
-        public static string AreaPath = "OneITVSO\\Shared Experiences\\Studio\\Accessibility\\Accessibility PM"; //QA: CDSVSO Prod: OneITVSO\Shared Experiences\Studio\Accessibility\Accessibility PM
+        
         public static string shortcut_SubGroup;
         public static string shortcut_Group;
         public static string WorkitemType_Feature_Tag_NewAIRTRec = "NewAIRTRec";
@@ -738,7 +750,7 @@ namespace TFRestApiApp
             System.Data.DataTable dt = new System.Data.DataTable();
             SqlCommand cmd = new SqlCommand();
             string dbConn = null;
-            dbConn = @"Data Source = ";
+            dbConn = @"";
             cmd.CommandText = QueryName;
             Console.WriteLine("Executes {0}", QueryName);
             SqlConnection sqlConnection1 = new SqlConnection(dbConn);
