@@ -24,20 +24,20 @@ namespace TFRestApiApp
 
 
         /*Prod*/
-        static readonly string UserPAT = "";
-        static readonly string TFUrl = "https://microsoftit.visualstudio.com/";
-        static readonly string teamProject = "OneITVSO";
-        public static string AreaPath = "OneITVSO\\Shared Experiences\\Studio\\Accessibility\\Accessibility PM";
+        //static readonly string UserPAT = "";
+        //static readonly string TFUrl = "https://microsoftit.visualstudio.com/";
+        //static readonly string teamProject = "OneITVSO";
+        //public static string AreaPath = "OneITVSO\\Shared Experiences\\Studio\\Accessibility\\Accessibility PM";
 
         /*QA*/
-        //static readonly string UserPAT = "";
-        //static readonly string TFUrl = "https://smsgaccessibilityreviews.visualstudio.com"
-        //static readonly string teamProject = "CDSVSO";
-        //public static string AreaPath = "CDSVSO";
+        static readonly string UserPAT = "";
+        static readonly string TFUrl = "https://smsgaccessibilityreviews.visualstudio.com";
+        static readonly string teamProject = "CDSVSO";
+        public static string AreaPath = "CDSVSO";
 
         static readonly string UserAccount = "";
         static readonly string UserPassword = "";
-       
+
         static readonly string workitemType = "Feature";
         static readonly string workitemType2 = "User Story";
 
@@ -59,7 +59,7 @@ namespace TFRestApiApp
         public static string ApplicationName;
         public static string ComponentID;
         public static string Priority;
-        
+
         public static string shortcut_SubGroup;
         public static string shortcut_Group;
         public static string WorkitemType_Feature_Tag_NewAIRTRec = "NewAIRTRec";
@@ -79,6 +79,7 @@ namespace TFRestApiApp
 
         static void Main(string[] args)
         {
+            //sendMail(reportType_2, null);
             string applicationType = ConfigurationManager.AppSettings["ApplicationType"];
             Console.WriteLine("CSEO Accessbility Assessments ADO Features automater Creater Started......!");
             ConnectWithPAT(TFUrl, UserPAT);
@@ -93,7 +94,6 @@ namespace TFRestApiApp
             }
             else
             {
-
                 //get the count for newly created records in ALRT
                 List<string> dataList = new List<string>();
                 //Add the Newly added record ides in list
@@ -107,42 +107,56 @@ namespace TFRestApiApp
                     string subGrp = "";
                     string priority = "";
                     string grade = "";
+                    int tag = 0;
                     int newRecid = (int)row["RecId"];
-                    if (!DBNull.Value.Equals(row["NameDesc"]))
-                        nameDesc = (string)row["NameDesc"];
-                    if (!DBNull.Value.Equals(row["CreatedDt"]))
-                        createdDt = (string)row["CreatedDt"].ToString();
-                    if (!DBNull.Value.Equals(row["ComponentID"]))
-                        componentID = (string)row["ComponentID"].ToString();
-                    if (!DBNull.Value.Equals(row["Grp"]))
-                        grp = (string)row["Grp"];
-                    if (!DBNull.Value.Equals(row["SubGrp"]))
-                        subGrp = (string)row["SubGrp"];
-                    if (!DBNull.Value.Equals(row["Priority"]))
-                        priority = (string)row["Priority"].ToString();
-                    if (!DBNull.Value.Equals(row["Grade"]))
-                        grade = (string)row["Grade"];
-                    finalString = newRecid.ToString() + "," + nameDesc + "," + componentID + "," + createdDt + "," + grp + "," + subGrp + "," + priority + "," + grade + ",";
-                    //Get active ADO features based on record id
-                    string queryWiqlList = @"SELECT [System.Id] FROM WorkItems WHERE [System.TeamProject] = @project" +
-                    " and [System.WorkItemType] = 'Feature' and [System.Title] Contains Words " +
-                    recid_Pattern + newRecid.ToString() + "'" +
-                    "and [System.State] <> 'Removed' and [System.State] <> 'Closed'";
+                    if (!DBNull.Value.Equals(row["TagId"]))
+                        tag = (int)row["TagId"];
+                    if (tag != 2)
+                    {
+                        if (!DBNull.Value.Equals(row["NameDesc"]))
+                            nameDesc = (string)row["NameDesc"];
+                        if (!DBNull.Value.Equals(row["CreatedDt"]))
+                            createdDt = (string)row["CreatedDt"].ToString();
+                        if (!DBNull.Value.Equals(row["ComponentID"]))
+                            componentID = (string)row["ComponentID"].ToString();
+                        if (!DBNull.Value.Equals(row["Grp"]))
+                            grp = (string)row["Grp"];
+                        if (!DBNull.Value.Equals(row["SubGrp"]))
+                            subGrp = (string)row["SubGrp"];
+                        if (!DBNull.Value.Equals(row["Priority"]))
+                            priority = (string)row["Priority"].ToString();
+                        if (!DBNull.Value.Equals(row["Grade"]))
+                            grade = (string)row["Grade"];
+                        finalString = newRecid.ToString() + "," + nameDesc + "," + componentID + "," + createdDt + "," + grp + "," + subGrp + "," + priority + "," + grade + ",";
+                        //Get active ADO features based on record id
+                        string queryWiqlList = @"SELECT [System.Id] FROM WorkItems WHERE [System.TeamProject] = @project" +
+                        " and [System.WorkItemType] = 'Feature' and [System.Title] Contains Words " +
+                        recid_Pattern + newRecid.ToString() + "'" +
+                        "and [System.State] <> 'Removed' and [System.State] <> 'Closed'";
 
-                    RecordID = newRecid.ToString();
-                    Grade = grade;
-                    Group = grp;
-                    SubGroup = subGrp;
-                    ApplicationName = nameDesc;
-                    ComponentID = componentID;
-                    Priority = priority;
-                    shortcut_Group = string.Concat(Group.Where(c => c >= 'A' && c <= 'Z'));
-                    shortcut_SubGroup = string.Concat(SubGroup.Where(c => c >= 'A' && c <= 'Z'));
-                    string appendString = GetQueryResult(queryWiqlList, teamProject);
-                    finalString = finalString + appendString;
-                    dataList.Add(finalString);
+                        RecordID = newRecid.ToString();
+                        Grade = grade;
+                        Group = grp;
+                        SubGroup = subGrp;
+                        ApplicationName = nameDesc;
+                        ComponentID = componentID;
+                        Priority = priority;
+                        shortcut_Group = string.Concat(Group.Where(c => c >= 'A' && c <= 'Z'));
+                        shortcut_SubGroup = string.Concat(SubGroup.Where(c => c >= 'A' && c <= 'Z'));
+                        string appendString = GetQueryResult(queryWiqlList, teamProject);
+                        finalString = finalString + appendString;
+                        dataList.Add(finalString);
+                    }
                 }
-                sendMail(reportType_2, dataList);
+                if (dataList.Count == 0)
+                {
+                    sendMail(reportType_1, null);
+                }
+                else
+                {
+                    sendMail(reportType_2, dataList);
+                }
+
             }
 
         }
@@ -272,7 +286,6 @@ namespace TFRestApiApp
             string dataString = "";
             int parentId;
             int userStoryParentId;
-
             //Verify the Parent Scenario ID Mappign Based on Group and Priority
             if (shortcut_Group.Equals("CSEO"))
             {
@@ -579,10 +592,145 @@ namespace TFRestApiApp
             return WitClient.UpdateWorkItemAsync(patchDocument, WIId).Result; // return updated work item
         }
 
+        /// <summary>
+        /// Simple operations woth query
+        /// </summary>
+        /// <param name="project">Team Project Name</param>
+        /// <param name="queryRootPath">Root Folder for Query</param>
+        /// <param name="queryName">Query Name</param>
+        static void OperateWithQuery(string project, string queryRootPath, string queryName)
+        {
+            //Get new and active tasks
+            string customWiql = @"SELECT [System.Id], [System.Title], [System.State] FROM WorkItems WHERE [System.TeamProject] = @project" +
+                @" and [System.WorkItemType] = 'Task' and [System.State] <> 'Closed'";
 
+            string customWiql_Features = @"SELECT
+    [System.Id],
+    [System.WorkItemType],
+    [System.Title],
+    [System.AssignedTo],
+    [System.State],
+    [System.Tags]
+FROM workitems
+WHERE
+    [System.TeamProject] = @project
+    AND [System.WorkItemType] = 'Feature'
+    AND (
+        [System.Title] CONTAINS WORDS 'RecID_830'
+        OR [System.Title] CONTAINS WORDS 'RecID_916'
+        OR [System.Title] CONTAINS WORDS 'RecID_4035'
+    )
+    AND [System.State] IN ('New', 'Active')";
 
+            //Get new tasks only
+            string updatedWiql = @"SELECT [System.Id], [System.Title] FROM WorkItems WHERE [System.TeamProject] = @project" +
+                @" and [System.WorkItemType] = 'Task' and [System.State] == 'New'";
 
+            Console.WriteLine("Create New Query");
+            AddQuery(project, queryRootPath, queryName, customWiql);
+            RunStoredQuery(project, queryRootPath + "/" + queryName);
 
+            Console.WriteLine("\nUpdate Query");
+            EditQuery(project, queryRootPath + "/" + queryName, updatedWiql);
+            RunStoredQuery(project, queryRootPath + "/" + queryName);
+
+            Console.WriteLine("\nDelete Query");
+            RemoveQuery(project, queryRootPath + "/" + queryName);
+        }
+
+        /// <summary>
+        /// Run stored query on tfs/vsts
+        /// </summary>
+        /// <param name="project">Team Project Name</param>
+        /// <param name="queryPath">Path to Query</param>
+        static void RunStoredQuery(string project, string queryPath)
+        {
+            QueryHierarchyItem query = WitClient.GetQueryAsync(project, queryPath, QueryExpand.Wiql).Result;
+
+            string wiqlStr = query.Wiql;
+
+            GetQueryResults(wiqlStr, project);
+        }
+
+        /// <summary>
+        /// Run query and show result
+        /// </summary>
+        /// <param name="wiqlStr">Wiql String</param>
+        static void GetQueryResults(string wiqlStr, string teamProject)
+        {
+            WorkItemQueryResult result = RunQueryByWiql(wiqlStr, teamProject);
+
+            if (result != null)
+            {
+                if (result.WorkItems != null) // this is Flat List 
+                    foreach (var wiRef in result.WorkItems)
+                    {
+                        var wi = GetWorkItem(wiRef.Id);
+                        Console.WriteLine(String.Format("{0} - {1}", wi.Id, wi.Fields["System.Title"].ToString()));
+                    }
+                else if (result.WorkItemRelations != null) // this is Tree of Work Items or Work Items and Direct Links
+                {
+                    foreach (var wiRel in result.WorkItemRelations)
+                    {
+                        if (wiRel.Source == null)
+                        {
+                            var wi = GetWorkItem(wiRel.Target.Id);
+                            Console.WriteLine(String.Format("Top Level: {0} - {1}", wi.Id, wi.Fields["System.Title"].ToString()));
+                        }
+                        else
+                        {
+                            var wiParent = GetWorkItem(wiRel.Source.Id);
+                            var wiChild = GetWorkItem(wiRel.Target.Id);
+                            Console.WriteLine(String.Format("{0} --> {1} - {2}", wiParent.Id, wiChild.Id, wiChild.Fields["System.Title"].ToString()));
+                        }
+                    }
+                }
+                else Console.WriteLine("There is no query result");
+            }
+        }
+
+            /// <summary>
+            /// Update Existing Query
+            /// </summary>
+            /// <param name="project"></param>
+            /// <param name="queryPath"></param>
+            /// <param name="newWiqlStr"></param>
+            static void EditQuery(string project, string queryPath, string newWiqlStr)
+        {
+            QueryHierarchyItem query = WitClient.GetQueryAsync(project, queryPath).Result;
+            query.Wiql = newWiqlStr;
+
+            query = WitClient.UpdateQueryAsync(query, project, queryPath).Result;
+        }
+
+        /// <summary>
+        /// Remove Existing Query or Folder
+        /// </summary>
+        /// <param name="project"></param>
+        /// <param name="queryPath"></param>
+        static void RemoveQuery(string project, string queryPath)
+        {
+            WitClient.DeleteQueryAsync(project, queryPath);
+        }
+
+        /// <summary>
+        /// Create new query
+        /// </summary>
+        /// <param name="project"></param>
+        /// <param name="queryPath"></param>
+        /// <param name="QueryName"></param>
+        /// <param name="wiqlStr"></param>
+        static void AddQuery(string project, string queryPath, string QueryName, string wiqlStr)
+        {
+            QueryHierarchyItem query = new QueryHierarchyItem();
+            query.QueryType = QueryType.Flat;
+            query.Name = QueryName;
+            query.Wiql = wiqlStr;
+
+            query = WitClient.CreateQueryAsync(query, project, queryPath).Result;
+        }
+
+        
         #region sendEmail
         private static void sendMail(int reporttype, List<string> dataList)
         {
@@ -593,74 +741,105 @@ namespace TFRestApiApp
             if (reporttype == 1)
             {
                 builder.Append("<!DOCTYPE html>");
-                builder.Append("<html lang='en'>");
-                builder.Append("<head>");
-                builder.Append("<meta charset='utf-8'>");
-                builder.Append("<meta http-equiv='X-UA-Compatible' content='IE=edge'>");
-                builder.Append("<meta name='viewport' content='width=device-width, initial-scale=1'>");
-                builder.Append("<title>Tables</title>");
-                builder.Append("<style type='text/css'> * { -webkit-box-sizing: border-box; -moz-box-sizing: border-box; box-sizing: border-box; } *, ::after, ::before { box-sizing: border-box; } body { margin: 0; font-family: -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,'Noto Sans',sans-serif,'Apple Color Emoji','Segoe UI Emoji','Segoe UI Symbol','Noto Color Emoji'; line-height: 1.5; } .container { width: 100%; padding-right: 15px; padding-left: 15px;  margin: auto;  max-width: 725px; } .register { margin-top: 1%;  border-radius: 10px; background: #fff; }  p,table, caption, td, tr, th { margin:0; padding:0; font-weight:normal; }  /* ---- Paragraphs ---- */  p { margin-bottom:15px; }  /* ---- Table ---- */  h1.headreview{ font-size:40px; margin-bottom:10px; } .separator{ background: #b4beda;; margin-left: -15px; margin-right: -15px; height: 100px;  }  table { border-collapse:collapse; margin-bottom:15px;  }  caption {  font-size:15px; padding-bottom:10px; }  table td, table th {  border-width:0 1px 1px 0; border: 1px solid black; border-collapse: collapse; } th, td { padding: 1px; text-align: left; } } thead th[colspan], thead th[rowspan] { background:#66a9bd; }  tbody th, tfoot th { border-bottom:1px solid #000000; text-align: center; font-size: 14px; }  tbody td, tfoot td { border-bottom: 1px solid #000000; font-size: 12px; }  tfoot th { }  tfoot td { font-weight:bold; }  tbody tr.odd td {  background:#bcd9e1; }   .img { vertical-align: middle; border-style: none; height: 30px; width: 30px; margin-right:7px; } .header-up{ display: inline-block; width: 100%; padding-top: 10px; } .header-down{ display: inline-block; width: 100%; font-weight: bold; } .left-side{  float: left; width: 24%; display: flex; font-weight: bold; } .right-side{ float: left; border-left:2px solid #000000; padding: 0px 0px 0px 13px; font-weight: bold; }  .left-logo {  float:left;  width:50%;  }  .right-logo {   float:right; width:50%;   }   .right-logo span{ float: right; font-weight: bold;  } .eve-header{ font-size: 25px; padding: 0px; margin: 0px; } .footer{ height:50px; background: #000000; margin-right: -15px; margin-left: -15px; color: #fff; } .foot-content { position: absolute; color: #fff; margin-top: 10px; padding-left: 10px; font-size: 13px;  }  </style>");
-                builder.Append("</head>");
-                builder.Append("<body>");
-                builder.Append("<div class='container register'>");
-                builder.Append("<div class='row'>");
-                builder.Append("<div class='header-up'>");
-                builder.Append("<div class='left-logo'>");
-                builder.Append("<div class='img'><svg aria-hidden='true' focusable='false' data-prefix='fab' data-icon='microsoft' role='img' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 448 512' class='svg-inline--fa fa-microsoft fa-w-14 fa-3x'><path fill='currentColor' d='M0 32h214.6v214.6H0V32zm233.4 0H448v214.6H233.4V32zM0 265.4h214.6V480H0V265.4zm233.4 0H448V480H233.4V265.4z' class=''></path></svg></div>");
-                builder.Append("</div>");
-                builder.Append("<div class='right-logo'>");
-                builder.Append(" <span>CSEO Assessment Services : No Features Created in ADO</span>");
-                builder.Append("</div></div>");
-                builder.Append("<h2>Contact us</h2>");
-                builder.Append("<span><a href='mailto:CSEOA11yteam@microsoft.com?Subject=CSEO%20Accessibiltiy%20Services'>CSEO Accessibility Team</a></span>");
-                builder.Append("<span>CSEO Studio Accessibility</span> ");
-                builder.Append("</div>");
-                builder.Append("<div class='footer' style='background:#A49F9E;'><span class='foot-content'>Visit our <a href='https://microsoft.sharepoint.com/teams/meconnection/SitePages/Accessibility.aspx'>Accessibility Hub website</a> to learn more.</span></div>");
-                builder.Append(" </div>");
-                builder.Append(" </div>");
-                builder.Append("</body>");
-                builder.Append("</html>");
+                builder.Append("<html xmlns:v=\"urn:schemas-microsoft-com:vml\" xmlns:o=\"urn:schemas-microsoft-com:office:office\" xmlns:w=\"urn:schemas-microsoft-com:office:word\" xmlns:m=\"http://schemas.microsoft.com/office/2004/12/omml\" xmlns=\"http://www.w3.org/TR/REC-html40\"><head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=Windows-1252\"><meta name=\"Generator\" content=\"Microsoft Word 15 (filtered medium)\">");
+                builder.Append("<!--[if !mso]><style>v:*{behavior:url(#default#VML)}o:*{behavior:url(#default#VML)}w:*{behavior:url(#default#VML)}.shape{behavior:url(#default#VML)}</style><![endif]-->");
+                builder.Append("<style><!--");
+                builder.Append("@font-face{font-family:\"Cambria Math\";panose-1:2 4 5 3 5 4 6 3 2 4}@font-face{font-family:Calibri;panose-1:2 15 5 2 2 2 4 3 2 4}@font-face{font-family:\"Calibri Light\";panose-1:2 15 3 2 2 2 4 3 2 4}@font-face{font-family:\"Segoe UI\";panose-1:2 11 5 2 4 2 4 2 2 3}@font-face{font-family:\"Segoe UI Semibold\";panose-1:2 11 7 2 4 2 4 2 2 3}div.MsoNormal,li.MsoNormal,p.MsoNormal{margin:0;margin-bottom:.0001pt;font-size:11pt;font-family:Calibri,sans-serif}h1{mso-style-priority:9;mso-style-link:\"Heading 1 Char\";margin-top:12pt;margin-right:0;margin-bottom:0;margin-left:0;margin-bottom:.0001pt;page-break-after:avoid;font-size:16pt;font-family:\"Calibri Light\",sans-serif;color:#2f5496;font-weight:400}h2{mso-style-priority:9;mso-style-link:\"Heading 2 Char\";margin-top:2pt;margin-right:0;margin-bottom:0;margin-left:0;margin-bottom:.0001pt;page-break-after:avoid;font-size:13pt;font-family:\"Calibri Light\",sans-serif;color:#2f5496;font-weight:400}div.MsoTitle,li.MsoTitle,p.MsoTitle{mso-style-name:\"Title\\,Heading 1 Bold\";mso-style-priority:10;mso-style-link:\"Title Char\\,Heading 1 Bold Char\";margin-top:0;margin-right:0;margin-bottom:6pt;margin-left:0;line-height:90%;font-size:11pt;font-family:\"Segoe UI Semibold\",sans-serif;color:#282828;letter-spacing:-1pt}a:link,span.MsoHyperlink{mso-style-priority:99;color:#0563c1;text-decoration:underline}span.MsoIntenseEmphasis{mso-style-priority:21;font-family:\"Times New Roman\",serif;color:#5b9bd5;font-style:italic}span.Heading1Char{mso-style-name:\"Heading 1 Char\";mso-style-priority:9;mso-style-link:\"Heading 1\";font-family:\"Calibri Light\",sans-serif;color:#2f5496}span.Heading2Char{mso-style-name:\"Heading 2 Char\";mso-style-priority:9;mso-style-link:\"Heading 2\";font-family:\"Calibri Light\",sans-serif;color:#2f5496}span.TitleChar{mso-style-name:\"Title Char\\,Heading 1 Bold Char\";mso-style-priority:10;mso-style-link:\"Title\\,Heading 1 Bold\";font-family:\"Segoe UI Semibold\",sans-serif;color:#282828;letter-spacing:-1pt}span.LogoChar{mso-style-name:\"Logo Char\";mso-style-link:Logo;font-family:\"Segoe UI Semibold\",sans-serif;color:#282828;letter-spacing:-.3pt}div.Logo,li.Logo,p.Logo{mso-style-name:Logo;mso-style-link:\"Logo Char\";margin-top:0;margin-right:0;margin-bottom:28pt;margin-left:0;font-size:11pt;font-family:\"Segoe UI Semibold\",sans-serif;color:#282828;letter-spacing:-.3pt}.MsoChpDefault{mso-style-type:export-only;font-size:10pt}@page WordSection1{size:8.5in 11in;margin:1in 1in 1in 1in}div.WordSection1{page:WordSection1}");
+                builder.Append("-->");
+                builder.Append(".TFtable{width:100%;border-collapse:collapse}.TFtable td,th{padding:7px;border:#4e95f4 1px solid}.th{background-color:#c1e4ec}.TFtable tr{background:#b8d1f3}.TFtable tr:nth-child(odd){background:#b8d1f3}.TFtable tr:nth-child(even){background:#dae5f4}");
+                builder.Append("</style>");
+                builder.Append("<!--[if gte mso 9]> <xml> <o:shapedefaults v:ext=\"edit\" spidmax=\"1027\" /> </xml> <![endif]--> <!--[if gte mso 9]> <xml> <o:shapelayout v:ext=\"edit\"> <o:idmap v:ext=\"edit\" data=\"1\" /> </o:shapelayout> </xml> <![endif]-->");
+                builder.Append("</head><body lang=\"EN-US\" link=\"#0563C1\" vlink=\"#954F72\"><div class=\"WordSection1\"><p class=\"MsoNormal\"> <o:p>&nbsp;</o:p></p><div align=\"center\"><table class=\"MsoNormalTable\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\" width=\"837\" style=\"width:627.6pt;border-collapse:collapse\"><tr style=\"height:83.7pt\"><td width=\"837\" nowrap=\"\" valign=\"bottom\" style=\"width:627.6pt;background:#c1e4ec;padding:0in 0in 0in .3in;height:83.7pt\"><table class=\"MsoNormalTable\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\" style=\"border-collapse:collapse\"><tr><td width=\"499\" valign=\"bottom\" style=\"width:374.05pt;padding:0in 0in .15in 0in\"><p class=\"MsoNormal\"> <a href=\"https://microsoftit.visualstudio.com/DefaultCollection/OneITVSO/\"> <img border=\"0\" style=\"width:-1.6875in;height:.4791in\" width=\"93\" height=\"45\" id=\"_x0000_i1026\" src=\"https://www.freepnglogos.com/uploads/microsoft-logo-png-transparent-20.png\"> <o:p></o:p> </a></p></td><td width=\"499\" valign=\"bottom\" style=\"width:374.05pt;padding:0in 0in .15in 0in\">");
+                builder.Append("<p class=\"MsoNormal\"><b>CSEO Assessment Services: " + DateTime.Now.ToString("dddd , MMM dd yyyy,hh:mm:ss"));
+                builder.Append("</b></p>");
+                builder.Append("</td></tr><tr></tr></table></td></tr><tr style=\"height:.1in\"><td width=\"837\" valign=\"top\" style=\"width:627.6pt;padding:0in 0in 0in 0in;height:.1in\"><p class=\"MsoNormal\"> <span style=\"font-size:1.0pt;font-family:&quot;Segoe UI&quot;,sans-serif;color:#262626;letter-spacing:-.2pt\"> <o:p>&nbsp;</o:p> </span></p></td></tr><tr style=\"height:1.8pt\"><td width=\"837\" valign=\"top\" style=\"width:627.6pt;background:#F2F2F2;padding:.15in .3in 0in .3in;height:1.8pt\"></td></tr><tr style=\"height:64.35pt\"><td width=\"837\" valign=\"top\" style=\"width:627.6pt;background:#F2F2F2;padding:0in .3in 0in .3in;height:64.35pt\"><h1>");
+                //builder.Append("<!--[if gte vml 1]> <v:shapetype id=\"_x0000_t75\" coordsize=\"21600,21600\" o:spt=\"75\" o:preferrelative=\"t\" path=\"m@4@5l@4@11@9@11@9@5xe\" filled=\"f\" stroked=\"f\"> <v:stroke joinstyle=\"miter\" /> <v:formulas> <v:f eqn=\"if lineDrawn pixelLineWidth 0\" /> <v:f eqn=\"sum @0 1 0\" /> <v:f eqn=\"sum 0 0 @1\" /> <v:f eqn=\"prod @2 1 2\" /> <v:f eqn=\"prod @3 21600 pixelWidth\" /> <v:f eqn=\"prod @3 21600 pixelHeight\" /> <v:f eqn=\"sum @0 0 1\" /> <v:f eqn=\"prod @6 1 2\" /> <v:f eqn=\"prod @7 21600 pixelWidth\" /> <v:f eqn=\"sum @8 21600 0\" /> <v:f eqn=\"prod @7 21600 pixelHeight\" /> <v:f eqn=\"sum @10 21600 0\" /> </v:formulas> <v:path o:extrusionok=\"f\" gradientshapeok=\"t\" o:connecttype=\"rect\" /> <o:lock v:ext=\"edit\" aspectratio=\"t\" /> </v:shapetype> <v:shape id=\"Picture_x0020_1\" o:spid=\"_x0000_s1026\" type=\"#_x0000_t75\" style='position:absolute;margin-left:-30.6pt;margin-top:0;width:125.25pt;height:102.7pt;z-index:251659264;visibility:visible;mso-wrap-style:square;mso-width-percent:0;mso-height-percent:0;mso-wrap-distance-left:9pt;mso-wrap-distance-top:0;mso-wrap-distance-right:9pt;mso-wrap-distance-bottom:0;mso-position-horizontal:absolute;mso-position-horizontal-relative:text;mso-position-vertical:absolute;mso-position-vertical-relative:text;mso-width-percent:0;mso-height-percent:0;mso-width-relative:page;mso-height-relative:page'> <v:imagedata src=\"cid:image002.jpg@01D60205.B6519420\" o:title=\"\" /> <w:wrap type=\"square\"/> </v:shape> <![endif]-->");
+                //builder.Append("<![if !vml]> <!img style=\"width:1.7395in;height:1.427in;float: left;\" src=\"https://pngimage.net/wp-content/uploads/2018/05/alert-logo-png-1.png\" align=\"left\" hspace=\"12\" v:shapes=\"Picture_x0020_1\">");
+                builder.Append("<p class=\"MsoNormal\" style=\"display: flex !important; \">");
+                builder.Append("<img border=\"0\" width=\"38\" height=\"34\" id=\"_x0000_i1026\" src=\"https://cdn.pixabay.com/photo/2013/07/13/09/36/megaphone-155780_960_720.png\"> <o:p></o:p><h2 style=\"color:#17067a;\" ><b>Alert (No Action Required: CSEO Accessability Services- No Features and UserStories are Created</b> <o:p></o:p></h2>");
+                builder.Append("</p> <br/><p class=\"MsoNormal\" style=\"vertical-align:middle\"> <span style=\"color:black\">The CSEO ADO Workitems creater tool, Creates a new features for the newly created AIRT ID (record) if it doesn’t exist already. The feature will be a child to the below Scenarios:</span></p> <o:p></o:p><p class=\"MsoNormal\" style=\"vertical-align:middle\"> <span style=\"color:black\">1. <a href=\"https://microsoftit.visualstudio.com/OneITVSO/_workitems/edit/4889949\">SCENARIO 4889949: </a>[Assessment] Plan and Assessments for CSEO applications. it will as well add a child link UserStory to that feature.</span>");
+                //builder.Append("<br/><span style=\"color:black\">2. <a href=\"https://microsoftit.visualstudio.com/OneITVSO/_workitems/edit/4889951\">SCENARIO 4889951: </a>[Assessment] Assist Non-CSEO organizations with Assessment tasks. It will as well add a child link UserStory to the that feature.</span>");
+                builder.Append("<br/><span style=\"color:black\">2. <a href=\"https://microsoftit.visualstudio.com/OneITVSO/_workitems/edit/5324882\">SCENARIO 5324882: </a>[Grade Review] Plan and Execute CSEO P3 Applications Grade Reviews. It will as well add a child link UserStory to the that feature</span>" +
+                    "</p> <br/>" +
+                    "<p class=\"MsoNormal\" style=\"color:black;\"> P.S- You need to manually define the iteration for the feature/UserStory created above. The tag GetHealthy/StayHealthy will be added automatically by the tool. <o:p>&nbsp;</o:p></p>" +
+                    "<p class=\"MsoNormal\"> <o:p>&nbsp;</o:p></p>");
+                builder.Append("<p class=\"MsoNormal\">" +
+                    "<span class=\"Heading2Char\">" +
+                    "<span style=\"font-size:13.0pt\"><b>Newly Created ADO Features and UserStories:0</b></span> </span> <span style=\"font-size:10.0pt;font-family:&quot;Segoe UI Semibold&quot;,sans-serif\"> <o:p></o:p> </span></p><p class=\"MsoNormal\"> <span style=\"color:black\">");
+                builder.Append("<br/><p class=\"MsoNormal\"> <span class=\"Heading2Char\"> <span style=\"font-size:13.0pt\"><b>Overview:</b></span> </span> <span style=\"font-size:10.0pt;font-family:&quot;Segoe UI Semibold&quot;,sans-serif\"> <o:p></o:p> </span></p>");
+                builder.Append("<p class=\"MsoNormal\"> " +
+                    "<span style=\"color:black\">" +
+                    "<table class=\"TFtable\">" +
+                    "<colgroup span=\"2\"></colgroup>" +
+                    "<colgroup span=\"2\"></colgroup>" +
+                    "<colgroup span=\"2\"></colgroup>" +
+                    "<colgroup span=\"2\"></colgroup>" +
+                    "<tr>" +
+                    "<th colspan=\"2\" scope=\"colgroup\">Group/SubGroup</th>" +
+                    "<th colspan=\"3\" scope=\"colgroup\">Priority In AIRT</th>" +
+                    "<th colspan=\"3\" scope=\"colgroup\">Active / New Features in ADO</th>" +
+                    "<th colspan=\"3\" scope=\"colgroup\">Active / New User Story in ADO</th>" +
+                    "</tr>" +
+                    "<tr>" +
+                    "<th>Group</th>" +
+                    "<th>Sub Group</th>" +
+                    "<th>P1</th>" +
+                    "<th>P2</th>" +
+                    "<th>P3</th>" +
+                    "<th>P1</th>" +
+                    "<th>P2</th>" +
+                    "<th>P3</th>" +
+                    "<th>P1</th>" +
+                    "<th>P2</th>" +
+                    "<th>P3</th>" +
+                    "</tr>");
+                builder.Append("<tr>");
+                builder.Append("<td>Text</td>");
+                builder.Append("<td>Text</td>");
+                builder.Append("<td>0</td>");
+                builder.Append("<td>0</td>");
+                builder.Append("<td>0</td>");
+                builder.Append("<td>0</td>");
+                builder.Append("<td>0</td>");
+                builder.Append("<td>0</td>");
+                builder.Append("<td>0</td>");
+                builder.Append("<td>0</td>");
+                builder.Append("<td>0</td>");
+                builder.Append("</tr>");
+                //builder.Append("<tr style=\"height:64.35pt\"><td width=\"837\" valign=\"top\" style=\"width:627.6pt;background:#F2F2F2;padding:0in .3in 0in .3in;height:64.35pt\"> <br/><p class=\"MsoNormal\"> <span class=\"MsoIntenseEmphasis\"><b>Note: </b>CSEO Accessability Services ADO features and User story creator tool will create features and user storys only CSEO applications P1, P2 and P3 applications where TAGs doesn’t contains Non-Inventory.</span> <span class=\"MsoIntenseEmphasis\"> <span style=\"font-family:&quot;Calibri&quot;,sans-serif\"> <o:p></o:p> </span> </span></p></td></tr><tr style=\"height:64.35pt\"><td width=\"837\" valign=\"top\" style=\"width:627.6pt;background:#F2F2F2;padding:0in .3in 0in .3in;height:64.35pt\"><p class=\"MsoNormal\"> <o:p>&nbsp;</o:p></p></td></tr><tr style=\"height:41.85pt\"><td width=\"837\" valign=\"top\" style=\"width:627.6pt;background:#c1e4ec;padding:0in 0in 0in .3in;height:41.85pt\"><table class=\"MsoNormalTable\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\" style=\"border-collapse:collapse\"><tr style=\"height:27.9pt\"><td width=\"499\" valign=\"top\" style=\"width:374.25pt;padding:.15in .2in .15in 0in;height:27.9pt\"><p class=\"MsoNormal\"> <span style=\"font-size:8.0pt;color:#262626\"><b>Connect <a href=\"mailto:CSEOA11yteam@microsoft.com\">CSEO Accessibility Team</a></b></span></p><p class=\"MsoNormal\"> <span style=\"font-size:8.0pt;color:#262626\">Please visit our </span> <a href=\"https://microsoft.sharepoint.com/teams/meconnection/SitePages/Accessibility-Tags.aspx\"> <span style=\"font-size:8.0pt\">Accessbility Hub Website</span> </a> <span style=\"font-size:8.0pt\">to learn more. Microsoft <span style=\"color:#262626\">C</span>onfidential. </span> <span style=\"font-size:8.0pt;color:#282828;mso-fareast-language:IT\"> <o:p></o:p> </span></p></td><td width=\"144\" nowrap=\"\" style=\"width:107.75pt;border:solid windowtext 1.0pt;border-left:none;background:#282828;padding:0in 0in 0in 0in;height:27.9pt\"><p class=\"MsoNormal\" align=\"center\" style=\"text-align:center\"> <span style=\"color:white\"> <img border=\"0\" width=\"96\" height=\"42\" style=\"width:1.0in;height:.4375in\" id=\"_x0000_i1025\" src=\"https://www.freepnglogos.com/uploads/microsoft-logo-png-transparent-20.png\"> </span> <span style=\"font-size:9.0pt;color:white\"> <o:p></o:p> </span></p></td></tr></table></td></tr></table></div><p class=\"MsoNormal\"> <o:p>&nbsp;</o:p></p></div></body></html>");
+                builder.Append("</table> </span></p></td></tr><tr style=\"height:64.35pt\"><td width=\"837\" valign=\"top\" style=\"width:627.6pt;background:#F2F2F2;padding:0in .3in 0in .3in;height:64.35pt\"> <br/>" +
+                    "<p class=\"MsoNormal\"> <span class=\"MsoIntenseEmphasis\" style=\"color: black;\"><b>Note: </b>CSEO Accessability Services ADO features and User story creator tool will create features and user storys only CSEO applications P1, P2 and P3 applications where TAGs doesn’t contains Non-Inventory.</span> <span class=\"MsoIntenseEmphasis\"> <span style=\"font-family:&quot;Calibri&quot;,sans-serif\"> <o:p></o:p> </span> </span></p></td></tr><tr style=\"height:64.35pt\"><td width=\"837\" valign=\"top\" style=\"width:627.6pt;background:#F2F2F2;padding:0in .3in 0in .3in;height:64.35pt\"><p class=\"MsoNormal\"> <o:p>&nbsp;</o:p></p></td></tr><tr style=\"height:41.85pt\"><td width=\"837\" valign=\"top\" style=\"width:627.6pt;background:#c1e4ec;padding:0in 0in 0in .3in;height:41.85pt\"><table class=\"MsoNormalTable\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\" style=\"border-collapse:collapse\"><tr style=\"height:27.9pt\"><td width=\"499\" valign=\"top\" style=\"width:374.25pt;padding:.15in .2in .15in 0in;height:27.9pt\"><p class=\"MsoNormal\"> <span style=\"font-size:8.0pt;color:#262626\"><b>Connect <a href=\"mailto:CSEOA11yteam@microsoft.com\">CSEO Accessibility Team</a></b></span></p><p class=\"MsoNormal\"> <span style=\"font-size:8.0pt;color:#262626\">Please visit our </span> <a href=\"https://microsoft.sharepoint.com/teams/meconnection/SitePages/Accessibility-Tags.aspx\"> <span style=\"font-size:8.0pt\">Accessbility Hub Website</span> </a> <span style=\"font-size:8.0pt\">to learn more. Microsoft <span style=\"color:#262626\">C</span>onfidential. </span> <span style=\"font-size:8.0pt;color:#282828;mso-fareast-language:IT\"> <o:p></o:p> </span></p></td><td width=\"144\" nowrap=\"\" style=\"width:107.75pt;border:solid windowtext 1.0pt;border-left:none;background:#282828;padding:0in 0in 0in 0in;height:27.9pt\"><p class=\"MsoNormal\" align=\"center\" style=\"text-align:center\"> <span style=\"color:white\"> <img border=\"0\" width=\"96\" height=\"42\" style=\"width:1.0in;height:.4375in\" id=\"_x0000_i1025\" src=\"https://www.freepnglogos.com/uploads/microsoft-logo-png-transparent-20.png\"> </span> <span style=\"font-size:9.0pt;color:white\"> <o:p></o:p> </span></p></td></tr></table></td></tr></table></div><p class=\"MsoNormal\"> <o:p>&nbsp;</o:p></p></div></body></html>");
                 oMsg.Subject = "CSEO Accessbility Services - No Features Created in ADO : " + System.DateTime.Now.ToShortDateString() + " " + System.DateTime.Now.ToShortTimeString();
             }
             else
             {
                 builder.Append("<!DOCTYPE html>");
-                builder.Append("<html lang='en'>");
-                builder.Append("<head>");
-                builder.Append("<meta charset='utf-8'>");
-                builder.Append("<meta http-equiv='X-UA-Compatible' content='IE=edge'>");
-                builder.Append("<meta name='viewport' content='width=device-width, initial-scale=1'>");
-                builder.Append("<title>Tables</title>");
-                builder.Append("<style type='text/css'> * { -webkit-box-sizing: border-box; -moz-box-sizing: border-box; box-sizing: border-box; } *, ::after, ::before { box-sizing: border-box; } body { margin: 0; font-family: -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,'Noto Sans',sans-serif,'Apple Color Emoji','Segoe UI Emoji','Segoe UI Symbol','Noto Color Emoji'; line-height: 1.5; } .container { width: 100%; padding-right: 15px; padding-left: 15px;  margin: auto;  max-width: 725px; } .register { margin-top: 1%;  border-radius: 10px; background: #fff; }  p,table, caption, td, tr, th { margin:0; padding:0; font-weight:normal; }  /* ---- Paragraphs ---- */  p { margin-bottom:15px; }  /* ---- Table ---- */  h1.headreview{ font-size:40px; margin-bottom:10px; } .separator{ background: #b4beda;; margin-left: -15px; margin-right: -15px; height: 100px;  }  table { border-collapse:collapse; margin-bottom:15px;  }  caption {  font-size:15px; padding-bottom:10px; }  table td, table th {  border-width:0 1px 1px 0; border: 1px solid black; border-collapse: collapse; } th, td { padding: 1px; text-align: left; } } thead th[colspan], thead th[rowspan] { background:#66a9bd; }  tbody th, tfoot th { border-bottom:1px solid #000000; text-align: center; font-size: 14px; }  tbody td, tfoot td { border-bottom: 1px solid #000000; font-size: 12px; }  tfoot th { }  tfoot td { font-weight:bold; }  tbody tr.odd td {  background:#bcd9e1; }   .img { vertical-align: middle; border-style: none; height: 30px; width: 30px; margin-right:7px; } .header-up{ display: inline-block; width: 100%; padding-top: 10px; } .header-down{ display: inline-block; width: 100%; font-weight: bold; } .left-side{  float: left; width: 24%; display: flex; font-weight: bold; } .right-side{ float: left; border-left:2px solid #000000; padding: 0px 0px 0px 13px; font-weight: bold; }  .left-logo {  float:left;  width:50%;  }  .right-logo {   float:right; width:50%;   }   .right-logo span{ float: right; font-weight: bold;  } .eve-header{ font-size: 25px; padding: 0px; margin: 0px; } .footer{ height:50px; background: #000000; margin-right: -15px; margin-left: -15px; color: #fff; } .foot-content { position: absolute; color: #fff; margin-top: 10px; padding-left: 10px; font-size: 13px;  }  </style>");
-                builder.Append("</head>");
-                builder.Append("<body>");
-                builder.Append("<div class='container register'>");
-                builder.Append("<div class='row'>");
-                builder.Append("<div class='header-up'>");
-                builder.Append("<div class='left-logo'>");
-                builder.Append("<div class='img'><svg aria-hidden='true' focusable='false' data-prefix='fab' data-icon='microsoft' role='img' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 448 512' class='svg-inline--fa fa-microsoft fa-w-14 fa-3x'><path fill='currentColor' d='M0 32h214.6v214.6H0V32zm233.4 0H448v214.6H233.4V32zM0 265.4h214.6V480H0V265.4zm233.4 0H448V480H233.4V265.4z' class=''></path></svg></div>");
-                builder.Append("</div>");
-                builder.Append("<div class='right-logo'>");
-                //builder.Append(" <span>CSEO Assessment Services</span><br>");
-                builder.Append("</div></div>");
-                builder.Append("<br><br>");
-                builder.Append(" <div class='header-down'>");
-                builder.Append("<div class='left-side'>");
-                builder.Append("<div class='img'>");
-                builder.Append("<svg xmlns='http://www.w3.org/2000/svg' id='Layer_3' enable-background='new 0 0 64 64'viewBox='0 0 64 64'><g><path d='m20.042 29.373c5.944-5.944 9.409-13.701 9.893-22.023l26.716 26.716c-8.323.484-16.08 3.95-22.023 9.894l-2.628 2.626-14.586-14.586zm8.958 20.213-14.586-14.586 1.586-1.586 14.586 14.586zm-12 11-13.586-13.586 1.586-1.586 13.586 13.586zm-8.586-14.586 1.586-1.586 9.586 9.586-1.586 1.586zm16.758 7.414c-.372.373-.888.586-1.414.586h-.516c-.526 0-1.042-.213-1.414-.586l-11.242-11.242c-.378-.379-.586-.881-.586-1.415v-.515c0-.534.208-1.036.586-1.415l2.414-2.413 14.586 14.586zm13.535 3.293 3.293-3.293 1.586 1.586-5.586 5.586-8.586-8.586 3.586-3.586 5.586 5.586-1.293 1.293zm-1.707-7.121-2.586-2.586.856-.856 3.878 1.293zm22-16-28.586-28.586 1.586-1.586 28.586 28.586z'/><path d='m51.169 13h11.662v2h-11.662z' transform='matrix(.858 -.515 .515 .858 .92 31.321)'/><path d='m44.169 6h11.662v2h-11.662z' transform='matrix(.515 -.857 .857 .515 18.266 46.268)'/></g></svg>");
-                builder.Append("</div>");
-                builder.Append("</div>");
-                builder.Append("</div>");
-                builder.Append("Hi All,<br/><br/>");
-                builder.Append("<p>The <b>CSEO ADO Workitems creater automated tool</b>, creates a new features for the newly created AIRT ID (record) if it doesn’t exist already. The feature will be a child to the below Scenarios : " +
-                    "<ul><li><p><a href='https://microsoftit.visualstudio.com/OneITVSO/_workitems/edit/4889949'>SCENARIO 4889949</a>[Assessment] Plan and execute Assessments for CSEO applications. It will as well add a child link UserStory to the that feature.</p></li>" +
-                    "<li><p><a href='https://microsoftit.visualstudio.com/OneITVSO/_workitems/edit/4889951'>SCENARIO 4889951</a>[Assessment] Assist Non-CSEO organizations with Assessment tasks. It will as well add a child link UserStory to the that feature.</p></li>" +
-                    "<li><p><a href='https://microsoftit.visualstudio.com/OneITVSO/_workitems/edit/5324882'>SCENARIO 5324882</a>[Grade Review] Plan and Execute CSEO P3 Applications Grade Reviews. It will as well add a child link UserStory to the that feature</p></li>" +
-                    "</ul>" +
-                    "");
-                builder.Append("<p>P.S – you need to manually define the iteration for the Feature/UserStory created above. The tag GetHealthy/StayHealthy will be added automatically by the tool.</p>");
-                builder.Append("<h2>Newly Created ADO Features</h2>");
-                builder.Append("<table style='width: 100%'>");
+                builder.Append("<html xmlns:v=\"urn:schemas-microsoft-com:vml\" xmlns:o=\"urn:schemas-microsoft-com:office:office\" xmlns:w=\"urn:schemas-microsoft-com:office:word\" xmlns:m=\"http://schemas.microsoft.com/office/2004/12/omml\" xmlns=\"http://www.w3.org/TR/REC-html40\"><head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=Windows-1252\"><meta name=\"Generator\" content=\"Microsoft Word 15 (filtered medium)\">");
+                builder.Append("<!--[if !mso]><style>v:*{behavior:url(#default#VML)}o:*{behavior:url(#default#VML)}w:*{behavior:url(#default#VML)}.shape{behavior:url(#default#VML)}</style><![endif]-->");
+                builder.Append("<style><!--");
+                builder.Append("@font-face{font-family:\"Cambria Math\";panose-1:2 4 5 3 5 4 6 3 2 4}@font-face{font-family:Calibri;panose-1:2 15 5 2 2 2 4 3 2 4}@font-face{font-family:\"Calibri Light\";panose-1:2 15 3 2 2 2 4 3 2 4}@font-face{font-family:\"Segoe UI\";panose-1:2 11 5 2 4 2 4 2 2 3}@font-face{font-family:\"Segoe UI Semibold\";panose-1:2 11 7 2 4 2 4 2 2 3}div.MsoNormal,li.MsoNormal,p.MsoNormal{margin:0;margin-bottom:.0001pt;font-size:11pt;font-family:Calibri,sans-serif}h1{mso-style-priority:9;mso-style-link:\"Heading 1 Char\";margin-top:12pt;margin-right:0;margin-bottom:0;margin-left:0;margin-bottom:.0001pt;page-break-after:avoid;font-size:16pt;font-family:\"Calibri Light\",sans-serif;color:#2f5496;font-weight:400}h2{mso-style-priority:9;mso-style-link:\"Heading 2 Char\";margin-top:2pt;margin-right:0;margin-bottom:0;margin-left:0;margin-bottom:.0001pt;page-break-after:avoid;font-size:13pt;font-family:\"Calibri Light\",sans-serif;color:#2f5496;font-weight:400}div.MsoTitle,li.MsoTitle,p.MsoTitle{mso-style-name:\"Title\\,Heading 1 Bold\";mso-style-priority:10;mso-style-link:\"Title Char\\,Heading 1 Bold Char\";margin-top:0;margin-right:0;margin-bottom:6pt;margin-left:0;line-height:90%;font-size:11pt;font-family:\"Segoe UI Semibold\",sans-serif;color:#282828;letter-spacing:-1pt}a:link,span.MsoHyperlink{mso-style-priority:99;color:#0563c1;text-decoration:underline}span.MsoIntenseEmphasis{mso-style-priority:21;font-family:\"Times New Roman\",serif;color:#5b9bd5;font-style:italic}span.Heading1Char{mso-style-name:\"Heading 1 Char\";mso-style-priority:9;mso-style-link:\"Heading 1\";font-family:\"Calibri Light\",sans-serif;color:#2f5496}span.Heading2Char{mso-style-name:\"Heading 2 Char\";mso-style-priority:9;mso-style-link:\"Heading 2\";font-family:\"Calibri Light\",sans-serif;color:#2f5496}span.TitleChar{mso-style-name:\"Title Char\\,Heading 1 Bold Char\";mso-style-priority:10;mso-style-link:\"Title\\,Heading 1 Bold\";font-family:\"Segoe UI Semibold\",sans-serif;color:#282828;letter-spacing:-1pt}span.LogoChar{mso-style-name:\"Logo Char\";mso-style-link:Logo;font-family:\"Segoe UI Semibold\",sans-serif;color:#282828;letter-spacing:-.3pt}div.Logo,li.Logo,p.Logo{mso-style-name:Logo;mso-style-link:\"Logo Char\";margin-top:0;margin-right:0;margin-bottom:28pt;margin-left:0;font-size:11pt;font-family:\"Segoe UI Semibold\",sans-serif;color:#282828;letter-spacing:-.3pt}.MsoChpDefault{mso-style-type:export-only;font-size:10pt}@page WordSection1{size:8.5in 11in;margin:1in 1in 1in 1in}div.WordSection1{page:WordSection1}");
+                builder.Append("-->");
+                builder.Append(".TFtable{width:100%;border-collapse:collapse}.TFtable td,th{padding:7px;border:#4e95f4 1px solid}.th{background-color:#c1e4ec}.TFtable tr{background:#b8d1f3}.TFtable tr:nth-child(odd){background:#b8d1f3}.TFtable tr:nth-child(even){background:#dae5f4}");
+                builder.Append("</style>");
+                builder.Append("<!--[if gte mso 9]> <xml> <o:shapedefaults v:ext=\"edit\" spidmax=\"1027\" /> </xml> <![endif]--> <!--[if gte mso 9]> <xml> <o:shapelayout v:ext=\"edit\"> <o:idmap v:ext=\"edit\" data=\"1\" /> </o:shapelayout> </xml> <![endif]-->");
+                builder.Append("</head><body lang=\"EN-US\" link=\"#0563C1\" vlink=\"#954F72\"><div class=\"WordSection1\"><p class=\"MsoNormal\"> <o:p>&nbsp;</o:p></p><div align=\"center\"><table class=\"MsoNormalTable\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\" width=\"837\" style=\"width:627.6pt;border-collapse:collapse\"><tr style=\"height:83.7pt\"><td width=\"837\" nowrap=\"\" valign=\"bottom\" style=\"width:627.6pt;background:#c1e4ec;padding:0in 0in 0in .3in;height:83.7pt\"><table class=\"MsoNormalTable\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\" style=\"border-collapse:collapse\"><tr><td width=\"499\" valign=\"bottom\" style=\"width:374.05pt;padding:0in 0in .15in 0in\"><p class=\"MsoNormal\"> <a href=\"https://microsoftit.visualstudio.com/DefaultCollection/OneITVSO/\"> <img border=\"0\" style=\"width:-1.6875in;height:.4791in\" width=\"93\" height=\"45\" id=\"_x0000_i1026\" src=\"https://www.freepnglogos.com/uploads/microsoft-logo-png-transparent-20.png\"> <o:p></o:p> </a></p></td><td width=\"499\" valign=\"bottom\" style=\"width:374.05pt;padding:0in 0in .15in 0in\">");
+                builder.Append("<p class=\"MsoNormal\"><b>CSEO Assessment Services: "+ DateTime.Now.ToString("dddd , MMM dd yyyy,hh:mm:ss"));
+                builder.Append("</b></p>");
+                builder.Append("</td></tr><tr></tr></table></td></tr><tr style=\"height:.1in\"><td width=\"837\" valign=\"top\" style=\"width:627.6pt;padding:0in 0in 0in 0in;height:.1in\"><p class=\"MsoNormal\"> <span style=\"font-size:1.0pt;font-family:&quot;Segoe UI&quot;,sans-serif;color:#262626;letter-spacing:-.2pt\"> <o:p>&nbsp;</o:p> </span></p></td></tr><tr style=\"height:1.8pt\"><td width=\"837\" valign=\"top\" style=\"width:627.6pt;background:#F2F2F2;padding:.15in .3in 0in .3in;height:1.8pt\"></td></tr><tr style=\"height:64.35pt\"><td width=\"837\" valign=\"top\" style=\"width:627.6pt;background:#F2F2F2;padding:0in .3in 0in .3in;height:64.35pt\"><h1>");
+                //builder.Append("<!--[if gte vml 1]> <v:shapetype id=\"_x0000_t75\" coordsize=\"21600,21600\" o:spt=\"75\" o:preferrelative=\"t\" path=\"m@4@5l@4@11@9@11@9@5xe\" filled=\"f\" stroked=\"f\"> <v:stroke joinstyle=\"miter\" /> <v:formulas> <v:f eqn=\"if lineDrawn pixelLineWidth 0\" /> <v:f eqn=\"sum @0 1 0\" /> <v:f eqn=\"sum 0 0 @1\" /> <v:f eqn=\"prod @2 1 2\" /> <v:f eqn=\"prod @3 21600 pixelWidth\" /> <v:f eqn=\"prod @3 21600 pixelHeight\" /> <v:f eqn=\"sum @0 0 1\" /> <v:f eqn=\"prod @6 1 2\" /> <v:f eqn=\"prod @7 21600 pixelWidth\" /> <v:f eqn=\"sum @8 21600 0\" /> <v:f eqn=\"prod @7 21600 pixelHeight\" /> <v:f eqn=\"sum @10 21600 0\" /> </v:formulas> <v:path o:extrusionok=\"f\" gradientshapeok=\"t\" o:connecttype=\"rect\" /> <o:lock v:ext=\"edit\" aspectratio=\"t\" /> </v:shapetype> <v:shape id=\"Picture_x0020_1\" o:spid=\"_x0000_s1026\" type=\"#_x0000_t75\" style='position:absolute;margin-left:-30.6pt;margin-top:0;width:125.25pt;height:102.7pt;z-index:251659264;visibility:visible;mso-wrap-style:square;mso-width-percent:0;mso-height-percent:0;mso-wrap-distance-left:9pt;mso-wrap-distance-top:0;mso-wrap-distance-right:9pt;mso-wrap-distance-bottom:0;mso-position-horizontal:absolute;mso-position-horizontal-relative:text;mso-position-vertical:absolute;mso-position-vertical-relative:text;mso-width-percent:0;mso-height-percent:0;mso-width-relative:page;mso-height-relative:page'> <v:imagedata src=\"cid:image002.jpg@01D60205.B6519420\" o:title=\"\" /> <w:wrap type=\"square\"/> </v:shape> <![endif]-->");
+                //builder.Append("<![if !vml]> <!img style=\"width:1.7395in;height:1.427in;float: left;\" src=\"https://pngimage.net/wp-content/uploads/2018/05/alert-logo-png-1.png\" align=\"left\" hspace=\"12\" v:shapes=\"Picture_x0020_1\">");
+                builder.Append("<p class=\"MsoNormal\" style=\"display: flex !important; \">");
+                builder.Append("<img border=\"0\" width=\"38\" height=\"34\" id=\"_x0000_i1026\" src=\"https://cdn.pixabay.com/photo/2013/07/13/09/36/megaphone-155780_960_720.png\"> <o:p></o:p><h2 style=\"color:#f02d0b;\" ><b>Alert (Action Required: CSEO Accessability Services- Newly Features and UserStories are Created</b> <o:p></o:p></h2>");
+                builder.Append("</p> <br/><p class=\"MsoNormal\" style=\"vertical-align:middle\"> <span style=\"color:black\">The CSEO ADO Workitems creater tool, Creates a new features for the newly created AIRT ID (record) if it doesn’t exist already. The feature will be a child to the below Scenarios:</span></p> <o:p></o:p><p class=\"MsoNormal\" style=\"vertical-align:middle\"> <span style=\"color:black\">1. <a href=\"https://microsoftit.visualstudio.com/OneITVSO/_workitems/edit/4889949\">SCENARIO 4889949: </a>[Assessment] Plan and Assessments for CSEO applications. it will as well add a child link UserStory to that feature.</span>");
+                //builder.Append("<br/><span style=\"color:black\">2. <a href=\"https://microsoftit.visualstudio.com/OneITVSO/_workitems/edit/4889951\">SCENARIO 4889951: </a>[Assessment] Assist Non-CSEO organizations with Assessment tasks. It will as well add a child link UserStory to the that feature.</span>");
+                builder.Append("<br/><span style=\"color:black\">2. <a href=\"https://microsoftit.visualstudio.com/OneITVSO/_workitems/edit/5324882\">SCENARIO 5324882: </a>[Grade Review] Plan and Execute CSEO P3 Applications Grade Reviews. It will as well add a child link UserStory to the that feature</span>" +
+                    "</p> <br/>" +
+                    "<p class=\"MsoNormal\" style=\"color:black;\"> P.S- You need to manually define the iteration for the feature/UserStory created above. The tag GetHealthy/StayHealthy will be added automatically by the tool. <o:p>&nbsp;</o:p></p>" +
+                    "<p class=\"MsoNormal\"> <o:p>&nbsp;</o:p></p>");
+                builder.Append("<p class=\"MsoNormal\">" +
+                    "<span class=\"Heading2Char\">" +
+                    "<span style=\"font-size:13.0pt\"><b>Newly Created ADO Features and UserStories:</b></span> </span> <span style=\"font-size:10.0pt;font-family:&quot;Segoe UI Semibold&quot;,sans-serif\"> <o:p></o:p> </span></p><p class=\"MsoNormal\"> <span style=\"color:black\">");
+                builder.Append("<table class=\"TFtable\">");
                 builder.Append("<tr>");
                 builder.Append("<th><b>RecID</b></th>");
                 builder.Append("<th><b>Application Name</b></th>");
@@ -712,30 +891,40 @@ namespace TFRestApiApp
                     }
                 }
                 builder.Append("</table>");
-                builder.Append("<br><p>For the above UserStory, you need to create two tasks.(E.g. sample tasks below). One for onboarding and other for assessment.</p>");
-                //builder.Append("<h2>Next steps and checklist</h2>");
-                builder.Append("<ul>");
-                builder.Append("<li>Task1 => [Activity:Onboarding][2002][RecID_1491][CFE] Succession Planning</li>");
-                builder.Append("<li>Task2 => [Activity:Assessment][2002][RecID_1491][CFE] Succession Planning</li>");
-                builder.Append("</ul>");
-                builder.Append("<p>Please add the tags as well define the iterations for the tasks.</p>");
-                builder.Append("<div style='display:grid;background:#cac4c4;margin-left: -15px;margin-right:-15px;padding-left: 15px;padding-right: 15px;'>");
-                builder.Append("<h2>Contact us</h2>");
-                builder.Append("<span><a href='#'>CSEO Accessibility Team</a></span>");
-                //builder.Append("<span>CSEO Studio Accessibility</span> ");
-                builder.Append("</div>");
-                builder.Append("<div class='footer' style='background:#A49F9E;'><span class='foot-content'>Visit our <a href='#'>Accessibility Hub website</a> to learn more.</span></div>");
-                builder.Append(" </div>");
-                builder.Append(" </div>");
-                builder.Append("</body>");
-                builder.Append("</html>");
+                builder.Append("</span></p><p class=\"MsoNormal\"> <span class=\"Heading2Char\"> <br/><span style=\"font-size:13.0pt\"><b>Next Steps:</b></span> </span> <span style=\"font-size:10.0pt;font-family:&quot;Segoe UI Semibold&quot;,sans-serif\"> <o:p></o:p> </span></p>" +
+                    "<p class=\"MsoNormal\" style=\"color: black;\">For the above UserStory you needto create t6wo tasks (E.g. Sample tasks below)</p>" +
+                    "<p class=\"MsoNormal\" style=\"color: black;\">1. Task 1 => [Activity.Onboarding][2002][RecID_1491][CFE]Succession Planning</p>" +
+                    "<p class=\"MsoNormal\" style=\"color: black;\">2. Task 2 => [Activity.Assessment][2002][RecID_1491][CFE]Succession Planning</p> " +
+                    "<br/><p class=\"MsoNormal\" style=\"color: black;\">Please add the tags as well define the iterations for the tasks.</p>");
+                builder.Append("<br/><p class=\"MsoNormal\"> <span class=\"Heading2Char\"> <span style=\"font-size:13.0pt\"><b>Overview:</b></span> </span> <span style=\"font-size:10.0pt;font-family:&quot;Segoe UI Semibold&quot;,sans-serif\"> <o:p></o:p> </span></p>");
+                builder.Append("<p class=\"MsoNormal\"> <span style=\"color:black\"><table class=\"TFtable\"><colgroup span=\"2\"></colgroup><colgroup span=\"2\"></colgroup><colgroup span=\"2\"></colgroup><colgroup span=\"2\"></colgroup><tr><th colspan=\"2\" scope=\"colgroup\">Group/SubGroup</th><th colspan=\"3\" scope=\"colgroup\">Priority In AIRT</th><th colspan=\"3\" scope=\"colgroup\">Active / New Features in ADO</th><th colspan=\"3\" scope=\"colgroup\">Active / New User Story in ADO</th></tr><tr><th>Group</th><th>Sub Group</th><th>P1</th><th>P2</th><th>P3</th><th>P1</th><th>P2</th><th>P3</th><th>P1</th><th>P2</th><th>P3</th></tr>");
+                builder.Append("<tr>");
+                builder.Append("<td>Text</td>");
+                builder.Append("<td>Text</td>");
+                builder.Append("<td>0</td>");
+                builder.Append("<td>0</td>");
+                builder.Append("<td>0</td>");
+                builder.Append("<td>0</td>");
+                builder.Append("<td>0</td>");
+                builder.Append("<td>0</td>");
+                builder.Append("<td>0</td>");
+                builder.Append("<td>0</td>");
+                builder.Append("<td>0</td>");
+                builder.Append("</tr>");
+                //builder.Append("<tr style=\"height:64.35pt\"><td width=\"837\" valign=\"top\" style=\"width:627.6pt;background:#F2F2F2;padding:0in .3in 0in .3in;height:64.35pt\"> <br/><p class=\"MsoNormal\"> <span class=\"MsoIntenseEmphasis\"><b>Note: </b>CSEO Accessability Services ADO features and User story creator tool will create features and user storys only CSEO applications P1, P2 and P3 applications where TAGs doesn’t contains Non-Inventory.</span> <span class=\"MsoIntenseEmphasis\"> <span style=\"font-family:&quot;Calibri&quot;,sans-serif\"> <o:p></o:p> </span> </span></p></td></tr><tr style=\"height:64.35pt\"><td width=\"837\" valign=\"top\" style=\"width:627.6pt;background:#F2F2F2;padding:0in .3in 0in .3in;height:64.35pt\"><p class=\"MsoNormal\"> <o:p>&nbsp;</o:p></p></td></tr><tr style=\"height:41.85pt\"><td width=\"837\" valign=\"top\" style=\"width:627.6pt;background:#c1e4ec;padding:0in 0in 0in .3in;height:41.85pt\"><table class=\"MsoNormalTable\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\" style=\"border-collapse:collapse\"><tr style=\"height:27.9pt\"><td width=\"499\" valign=\"top\" style=\"width:374.25pt;padding:.15in .2in .15in 0in;height:27.9pt\"><p class=\"MsoNormal\"> <span style=\"font-size:8.0pt;color:#262626\"><b>Connect <a href=\"mailto:CSEOA11yteam@microsoft.com\">CSEO Accessibility Team</a></b></span></p><p class=\"MsoNormal\"> <span style=\"font-size:8.0pt;color:#262626\">Please visit our </span> <a href=\"https://microsoft.sharepoint.com/teams/meconnection/SitePages/Accessibility-Tags.aspx\"> <span style=\"font-size:8.0pt\">Accessbility Hub Website</span> </a> <span style=\"font-size:8.0pt\">to learn more. Microsoft <span style=\"color:#262626\">C</span>onfidential. </span> <span style=\"font-size:8.0pt;color:#282828;mso-fareast-language:IT\"> <o:p></o:p> </span></p></td><td width=\"144\" nowrap=\"\" style=\"width:107.75pt;border:solid windowtext 1.0pt;border-left:none;background:#282828;padding:0in 0in 0in 0in;height:27.9pt\"><p class=\"MsoNormal\" align=\"center\" style=\"text-align:center\"> <span style=\"color:white\"> <img border=\"0\" width=\"96\" height=\"42\" style=\"width:1.0in;height:.4375in\" id=\"_x0000_i1025\" src=\"https://www.freepnglogos.com/uploads/microsoft-logo-png-transparent-20.png\"> </span> <span style=\"font-size:9.0pt;color:white\"> <o:p></o:p> </span></p></td></tr></table></td></tr></table></div><p class=\"MsoNormal\"> <o:p>&nbsp;</o:p></p></div></body></html>");
+                builder.Append("</table> </span></p></td></tr><tr style=\"height:64.35pt\"><td width=\"837\" valign=\"top\" style=\"width:627.6pt;background:#F2F2F2;padding:0in .3in 0in .3in;height:64.35pt\"> <br/>" +
+                    "<p class=\"MsoNormal\"> <span class=\"MsoIntenseEmphasis\" style=\"color: black;\"><b>Note: </b>CSEO Accessability Services ADO features and User story creator tool will create features and user storys only CSEO applications P1, P2 and P3 applications where TAGs doesn’t contains Non-Inventory.</span> <span class=\"MsoIntenseEmphasis\"> <span style=\"font-family:&quot;Calibri&quot;,sans-serif\"> <o:p></o:p> </span> </span></p></td></tr><tr style=\"height:64.35pt\"><td width=\"837\" valign=\"top\" style=\"width:627.6pt;background:#F2F2F2;padding:0in .3in 0in .3in;height:64.35pt\"><p class=\"MsoNormal\"> <o:p>&nbsp;</o:p></p></td></tr><tr style=\"height:41.85pt\"><td width=\"837\" valign=\"top\" style=\"width:627.6pt;background:#c1e4ec;padding:0in 0in 0in .3in;height:41.85pt\"><table class=\"MsoNormalTable\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\" style=\"border-collapse:collapse\"><tr style=\"height:27.9pt\"><td width=\"499\" valign=\"top\" style=\"width:374.25pt;padding:.15in .2in .15in 0in;height:27.9pt\"><p class=\"MsoNormal\"> <span style=\"font-size:8.0pt;color:#262626\"><b>Connect <a href=\"mailto:CSEOA11yteam@microsoft.com\">CSEO Accessibility Team</a></b></span></p><p class=\"MsoNormal\"> <span style=\"font-size:8.0pt;color:#262626\">Please visit our </span> <a href=\"https://microsoft.sharepoint.com/teams/meconnection/SitePages/Accessibility-Tags.aspx\"> <span style=\"font-size:8.0pt\">Accessbility Hub Website</span> </a> <span style=\"font-size:8.0pt\">to learn more. Microsoft <span style=\"color:#262626\">C</span>onfidential. </span> <span style=\"font-size:8.0pt;color:#282828;mso-fareast-language:IT\"> <o:p></o:p> </span></p></td><td width=\"144\" nowrap=\"\" style=\"width:107.75pt;border:solid windowtext 1.0pt;border-left:none;background:#282828;padding:0in 0in 0in 0in;height:27.9pt\"><p class=\"MsoNormal\" align=\"center\" style=\"text-align:center\"> <span style=\"color:white\"> <img border=\"0\" width=\"96\" height=\"42\" style=\"width:1.0in;height:.4375in\" id=\"_x0000_i1025\" src=\"https://www.freepnglogos.com/uploads/microsoft-logo-png-transparent-20.png\"> </span> <span style=\"font-size:9.0pt;color:white\"> <o:p></o:p> </span></p></td></tr></table></td></tr></table></div><p class=\"MsoNormal\"> <o:p>&nbsp;</o:p></p></div></body></html>");
                 oMsg.Subject = "CSEO Accessbility Services - Newly Created Features in ADO : " + System.DateTime.Now.ToShortDateString() + " " + System.DateTime.Now.ToShortTimeString();
             }
             string HtmlFile = builder.ToString();
 
             /* Live */
-            oMsg.To = ConfigurationManager.AppSettings["DftSendMailTo"];
-            oMsg.CC = ConfigurationManager.AppSettings["DftSendMailCC"];
+            //oMsg.To = ConfigurationManager.AppSettings["DftSendMailTo"];
+            //oMsg.CC = ConfigurationManager.AppSettings["DftSendMailCC"];
+
+            /* QA */
+            oMsg.To = ConfigurationManager.AppSettings["QA_DftSendMailTo"];
+            oMsg.CC = ConfigurationManager.AppSettings["QA_DftSendMailTo"];
 
             oMsg.HTMLBody = HtmlFile;
             Console.WriteLine("ADO Features are created and sent mail to respective folks");
